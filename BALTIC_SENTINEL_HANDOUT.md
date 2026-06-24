@@ -114,16 +114,121 @@ Postgres storage for findings and assessments
 Person B is responsible for:
 
 - Listening for `vessel.suspicion` messages.
-- Running the Claude agent workflow.
-- Identity Agent.
-- Behavior Agent.
-- Sanctions/Record Agent.
-- GPS Environment Agent.
-- Final synthesis agent.
-- ElevenLabs voice generation.
+- Running the Claude agent workflow (see §4.1 — **one Investigator agent doing
+  multi-step tool calls**, not four single-shot agents).
+- Investigator agent: identity, behavior, sanctions (mock), GPS/cable context,
+  plus real online research via Claude's built-in web search.
+- Watch Officer agent: final synthesis → threat assessment.
+- ElevenLabs voice generation + a drafted human alert.
 - Saving agent findings and final assessments into Postgres.
+- (Stretch) Shadow Tracker agent on a schedule.
 
 Person B should **not** build ship data ingest or tripwire rules.
+
+---
+
+## 4.1 Agent Architecture (Updated — supersedes the four-mini-agent list above)
+
+After review, we are **not** building four separate single-shot agents
+(Identity / Behavior / Sanctions / GPS). The Anthropic challenge explicitly
+penalizes "a single prompt in a wrapper," and four single-shot agents read as
+exactly that. Instead, **one Investigator agent does multi-step tool calling** —
+that is what scores on "agentic depth." It still produces several finding cards
+(one per tool result), so the UI stays rich.
+
+### Recommended architecture (if things go well)
+
+```text
+Tripwire Worker (cheap code, Person A — NOT a Claude agent)
+  → Kafka vessel.suspicion + Postgres row
+
+[Scheduled trigger — native Managed Agent schedule, NOT an agent]
+  ↓
+Investigator Agent (Claude Managed Agent)   ← multi-step, tool-using
+  - reads suspicion + track + identity + GPS + cable + sanctions (mock)
+  - does real online research with Claude's built-in web search
+  - writes 3-5 findings → Postgres + Kafka agent.findings
+  ↓
+Watch Officer Agent (Claude Managed Agent)
+  - reads all findings → LOW/MEDIUM/HIGH + reasoning + voice_script
+  - saves assessment → Postgres + Kafka threat.assessment
+  - creates ElevenLabs voice briefing
+  - drafts a human alert (Slack/email)   ← human-in-the-loop + connector points
+  ↓
+(Stretch) Shadow Tracker Agent — re-checks the vessel over time, escalates
+```
+
+### Minimum viable architecture (guaranteed floor)
+
+```text
+ONE Claude Managed Agent, triggered live:
+  claim suspicion → investigate (tools) → write findings (Postgres+Kafka)
+  → synthesize assessment → publish (Postgres+Kafka) → voice briefing
++ Full fallback path (canned findings/assessment/voice) behind DEMO_MODE
+```
+
+If only the MVP works, we still have a complete, defensible autonomous agent.
+Everything else is an upgrade.
+
+### Number of agents — decisions
+
+- **Scheduler is NOT a Claude agent.** Managed Agents give us scheduling for
+  free. Use the native schedule/trigger; don't spend an LLM on polling Postgres.
+- **Two Claude agents is the target** (Investigator + Watch Officer). The split
+  gives us a natural human-escalation handoff, which the judges reward.
+- **One agent is the safe floor.** Build the whole loop as one agent first,
+  split into two only if time allows.
+- **A 3rd agent (Shadow Tracker) only if we are ahead.** It maps exactly onto
+  the challenge line "runs on a schedule without watching it" — build it as a
+  **scheduled deployment** that re-checks each vessel on a cadence and escalates
+  if risk rises. For the demo, simulate time passing (feed a second, worse
+  position) so it visibly escalates on stage.
+
+### What is real vs mock
+
+| Info | Source | Real or mock |
+|---|---|---|
+| Suspicion event, recent track, vessel identity | Aiven Postgres (Person A) | Real (our own data) |
+| Online research about the vessel | Claude built-in web search | Real — Eagle S is a real sanctioned tanker; keep a canned fallback |
+| Sanctions / watchlist | Static JSON (or web search) | Mock — cheap, good story |
+| GPS-degraded region, cable corridor | Rule from lat/lon | Mock |
+| "Following the vessel over time" | Scheduled re-check (3rd agent) | Real schedule, simulated time for demo |
+
+---
+
+## 4.2 Connectivity — how the agent reaches Aiven (DECISION: Option A)
+
+The Managed Agent runs in Anthropic's cloud, **not** on our laptop, so it cannot
+see Aiven Postgres/Kafka by magic. We bridge it with **Option A**.
+
+### ✅ Option A — Custom tools, executed on our laptop (CHOSEN)
+
+We declare tools (`get_recent_track`, `lookup_sanctions`, `publish_finding`,
+`create_voice_briefing`, ...) as **custom tools** on the agent. When the agent
+calls one, it emits an event; our laptop orchestrator (holding the agent's event
+stream open) runs the real code against Aiven / ElevenLabs with our local keys
+and sends the result back.
+
+- **Why:** simplest reliable path; Aiven and ElevenLabs keys **never leave our
+  laptop**; matches the laptop + tunnel demo plan; reuses our FastAPI code;
+  trivial to mock (`DEMO_MODE` returns canned data); no public server to host.
+- **Cost:** the orchestrator process must stay running during the demo (fine),
+  and we write the tool-dispatch glue ourselves.
+
+### 📝 Option B — Our own MCP server (note only, not building now)
+
+Build a small MCP server wrapping the same tools; the agent connects via
+`mcp_toolset` with credentials in an Anthropic vault. Cleaner "MCP-native" story,
+but we must host the server publicly (HTTPS via tunnel) + set up vault auth —
+more setup and more to break live. Revisit only if well ahead.
+
+### 📝 Option C — Aiven MCP, agent queries the data layer directly (note only)
+
+If Aiven offers an MCP server, the agent could query Postgres/Kafka directly —
+the strongest *Aiven-challenge narrative* ("the agent controls Aiven via MCP").
+But it runs raw SQL (riskier), still needs voice + Kafka-publish handled
+elsewhere, and is hardest to mock. Consider as a **read-only flourish** on top of
+Option A if we are ahead — not as the core.
 
 ---
 
@@ -697,16 +802,19 @@ Person A:
 - Publish fake Eagle S ship events to `ais.raw`.
 - Save track rows to Postgres.
 
-Person B:
+Person B (see §4.1 / §4.2 for the architecture):
 
-- Build a fake/manual consumer for `vessel.suspicion`.
-- Manually test with a fake suspicion JSON.
-- Start writing fallback agent outputs.
+- **Build the fallback path FIRST** — hardcoded Eagle S suspicion → mock tools →
+  canned findings + assessment, printed to console. This is the demo safety net.
+- Load a fake `vessel.suspicion` JSON to drive it.
+- Spike **Option A** connectivity: confirm a local orchestrator can run one
+  custom tool (even a stub) and hand its result back.
 
 Done when:
 
 - Person A can publish ship events.
-- Person B can consume a fake suspicion event.
+- Person B can run the whole fake investigation end-to-end in `DEMO_MODE`
+  (findings + assessment printed, no external services needed).
 
 ---
 
@@ -720,14 +828,16 @@ Person A:
 
 Person B:
 
-- Build Identity Agent.
-- Build Behavior Agent.
-- Make both return short JSON.
+- Build the **Investigator agent** (one Claude Managed Agent) wired through
+  **Option A** (custom tools executed by the laptop orchestrator).
+- Start with 2 tools: `get_suspicion_event` + `get_recent_track`.
+- Have it write findings → `agent.findings`.
 
 Done when:
 
 - Eagle S replay creates a suspicion event.
-- Fake suspicion can create two agent findings.
+- A fake suspicion makes the Investigator agent produce real agent findings
+  (not canned — actual tool calls).
 
 ---
 
@@ -741,13 +851,15 @@ Person A:
 
 Person B:
 
-- Add Sanctions/Record Agent.
-- Add GPS Environment Agent.
-- Publish all four findings to `agent.findings`.
+- Add the rest of the Investigator's tools: `get_vessel_identity`,
+  `lookup_sanctions` (mock list), `check_gps_environment`, `get_cable_context`.
+- Add **real online research** using Claude's built-in web search.
+- Publish 3-5 findings to `agent.findings`; save them to Postgres.
 
 Done when:
 
-- One suspicion event creates four agent findings.
+- One suspicion event makes the Investigator produce several findings,
+  including one from web research.
 
 ---
 
@@ -761,10 +873,12 @@ Person A:
 
 Person B:
 
-- Build synthesis agent.
+- Build the **Watch Officer agent** (synthesis): read all findings →
+  LOW/MEDIUM/HIGH + confidence + reasoning + `voice_script`.
 - Publish `threat.assessment`.
 - Save assessment to Postgres.
 - Make `/assessment/latest` return the latest result.
+- Add idempotency (`mark_suspicion_event_processed`) so re-runs don't duplicate.
 
 Done when:
 
@@ -785,9 +899,14 @@ Person A:
 
 Person B:
 
-- Add ElevenLabs voice generation.
+- Watch Officer creates the ElevenLabs voice briefing (via an Option A custom
+  tool run on the laptop).
 - Make `/voice/latest` return the audio URL.
 - Add fallback `sample_voice.mp3`.
+- Add the **human alert draft** (Slack/email) — connector + human-in-the-loop
+  points the judges reward.
+- Make the Investigator a **real scheduled/triggerable Managed Agent** so the
+  "runs on a schedule without watching it" story is true, not hypothetical.
 
 Done when:
 
@@ -967,16 +1086,20 @@ I am Person B, Agent Workflow Lead for Baltic Sentinel.
 
 Use contracts.md exactly.
 
-Build the agent workflow:
+Build the agent workflow (see §4.1 / §4.2):
 1. Listen to Kafka topic vessel.suspicion.
-2. Run four Claude agents: Identity, Behavior, Sanctions Record, GPS Environment.
-3. Publish each finding to Kafka topic agent.findings.
-4. Save findings to Postgres.
-5. Run a synthesis agent to create a final threat assessment.
-6. Publish the final assessment to Kafka topic threat.assessment.
-7. Save the assessment to Postgres.
-8. Generate an ElevenLabs voice briefing from the voice_script.
-9. Add fallback outputs for Eagle S if Claude or ElevenLabs fails.
+2. Run ONE Investigator agent (Claude Managed Agent) that does multi-step tool
+   calls: identity, behavior, sanctions (mock), GPS/cable, and real online
+   research via built-in web search. Not four single-shot agents.
+3. Wire tools through Option A (custom tools run by a laptop orchestrator, so
+   Aiven/ElevenLabs keys never leave the laptop).
+4. Publish each finding to Kafka topic agent.findings and save to Postgres.
+5. Run a Watch Officer agent to create the final threat assessment.
+6. Publish the final assessment to Kafka topic threat.assessment + save it.
+7. Make /assessment/latest return it; add idempotency on processed suspicions.
+8. Generate an ElevenLabs voice briefing from voice_script + draft a human alert.
+9. Add fallback outputs for Eagle S if Claude or ElevenLabs fails (build first).
+10. (Stretch) Add a scheduled Shadow Tracker agent that re-checks the vessel.
 
 Only edit files in backend/app/agent_workflow unless a shared file is necessary.
 Explain every step simply because we are non-technical.
@@ -997,7 +1120,7 @@ And then the system creates:
 ```text
 1. ais.raw ship events
 2. vessel.suspicion danger event
-3. four agent.findings
+3. several agent.findings (3-5, from the one Investigator agent)
 4. one threat.assessment
 5. one voice.briefing
 6. latest assessment saved in Postgres
