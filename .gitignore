@@ -11,3 +11,6 @@ node_modules/
 .DS_Store
 *.mp3
 !demo_assets/sample_voice.mp3
+
+# Cached third-party data (downloaded at boot)
+backend/data/
