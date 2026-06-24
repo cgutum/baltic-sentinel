@@ -48,6 +48,21 @@ def candidates():
     return {"candidates": database.get_candidates()}
 
 
+@router.get("/track/{mmsi}")
+def track(mmsi: str):
+    """Recent position history for a vessel (for the map route trail)."""
+    from app import database
+    if not database.is_configured():
+        return {"mmsi": mmsi, "track": []}
+    from psycopg.rows import dict_row
+    with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        cur.execute("SELECT lon, lat FROM tracks WHERE mmsi=%s AND lon IS NOT NULL "
+                    "ORDER BY ts DESC LIMIT 300", (str(mmsi),))
+        rows = cur.fetchall()
+    coords = [[r["lon"], r["lat"]] for r in reversed(rows)]
+    return {"mmsi": mmsi, "track": coords}
+
+
 @router.post("/investigate/{mmsi}")
 def investigate(mmsi: str):
     """Operator-triggered: assemble a dossier and publish vessel.suspicion for the agents."""
