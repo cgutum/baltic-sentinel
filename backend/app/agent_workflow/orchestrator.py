@@ -39,9 +39,11 @@ def investigate(suspicion: dict) -> list[dict]:
 
 def synthesize(suspicion: dict, findings: list[dict]) -> dict:
     """Combine findings into one threat assessment; make voice; publish/persist."""
-    # TODO (H10): real Watch Officer agent. Until then synthesis is always canned,
-    # even when DEMO_MODE is off (so the H5 Investigator can run live end-to-end).
-    result = fallback_outputs.assessment(suspicion, findings)
+    if settings.demo_mode:
+        result = fallback_outputs.assessment(suspicion, findings)
+    else:
+        from . import synthesis_agent
+        result = synthesis_agent.run(suspicion, findings)  # real Claude; falls back on error
 
     ThreatAssessment(**result)  # drift guard vs contracts.md
 
@@ -70,7 +72,7 @@ def run_once(suspicion: dict | None = None) -> dict:
     print(f"[orchestrator] {len(findings)} findings collected")
     assessment = synthesize(suspicion, findings)
     print("[orchestrator] done")
-    return assessment
+    return {"suspicion": suspicion, "findings": findings, "assessment": assessment}
 
 
 if __name__ == "__main__":

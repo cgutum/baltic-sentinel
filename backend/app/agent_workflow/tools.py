@@ -42,8 +42,31 @@ def get_suspicion_event(suspicion_id: str | None = None) -> dict:
 
 
 def get_recent_track(mmsi: str) -> list[dict]:
-    """Return recent positions for a vessel. DEMO: a canned slow-drift track."""
-    # TODO live (H5+): SELECT lat,lon,speed,course,ts FROM tracks WHERE mmsi=...
+    """Return recent positions for a vessel.
+
+    Reads the real `tracks` table when Postgres is configured; otherwise (and on
+    any DB error) returns a canned slow-drift track so the demo still runs.
+    """
+    if database.is_configured():
+        try:
+            from psycopg.rows import dict_row
+
+            with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(
+                    "SELECT lat, lon, speed, course, ts FROM tracks "
+                    "WHERE mmsi = %s ORDER BY ts DESC LIMIT 8",
+                    (str(mmsi),),
+                )
+                rows = cur.fetchall()
+            if rows:
+                # Oldest-first so Claude reads the track in time order.
+                return [
+                    {"lat": r["lat"], "lon": r["lon"], "speed": r["speed"],
+                     "course": r["course"], "ts": str(r["ts"])}
+                    for r in reversed(rows)
+                ]
+        except Exception as e:  # noqa: BLE001 — fall back to mock, never break the run
+            print(f"[tools] get_recent_track DB read failed ({e}) — using mock track")
     return [
         {"lat": 59.66, "lon": 24.90, "speed": 3.4, "course": 18},
         {"lat": 59.69, "lon": 24.91, "speed": 2.2, "course": 25},

@@ -85,12 +85,13 @@ _TOOLS = [
 ]
 
 
-def _run_read_tool(name: str, tool_input: dict):
-    """Dispatch a read tool call to the Option A tools layer."""
+def _run_read_tool(name: str, tool_input: dict, suspicion: dict):
+    """Dispatch a read tool call. get_suspicion_event returns THIS case's real
+    suspicion (so any chosen vessel is investigated correctly, not the canned one)."""
     if name == "get_suspicion_event":
-        return tools.get_suspicion_event(tool_input.get("suspicion_id"))
+        return suspicion
     if name == "get_recent_track":
-        return tools.get_recent_track(tool_input["mmsi"])
+        return tools.get_recent_track(tool_input.get("mmsi") or suspicion.get("mmsi"))
     return {"error": f"unknown tool {name}"}
 
 
@@ -139,7 +140,7 @@ def _investigate_with_claude(suspicion: dict) -> list[dict]:
                     }
                     for f in raw
                 ]
-            result = _run_read_tool(block.name, block.input or {})
+            result = _run_read_tool(block.name, block.input or {}, suspicion)
             print(f"[investigator] tool {block.name} -> ok")
             tool_results.append(
                 {
