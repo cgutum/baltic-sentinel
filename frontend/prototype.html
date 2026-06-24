@@ -13,37 +13,29 @@
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;overflow:hidden}
 .app{display:grid;grid-template-rows:46px 1fr;height:100vh}
 .topbar{display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0A1120,#070C16);z-index:30}
-.menu{background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-size:15px;line-height:1;padding:6px 9px;cursor:pointer}
-.menu:hover{border-color:var(--cyan)}
+.menu{background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-size:15px;line-height:1;padding:6px 9px;cursor:pointer}.menu:hover{border-color:var(--cyan)}
 .brand{font-weight:600;letter-spacing:.15em;font-size:12px;white-space:nowrap}.brand b{color:#fff}.brand .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--threat);box-shadow:0 0 9px var(--threat);margin-right:8px;animation:pulse 2s infinite}
 .seg{display:flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden;font-size:11px}.seg button{background:transparent;color:var(--muted);border:0;padding:5px 11px;cursor:pointer;font-family:var(--sans)}.seg button.on{background:var(--cyan);color:#06121a;font-weight:600}
 .search{position:relative;flex:0 1 300px}.search input{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px}.search input:focus{outline:none;border-color:var(--cyan)}
 .results{position:absolute;top:34px;left:0;right:0;background:var(--surface);border:1px solid var(--line2);border-radius:3px;max-height:300px;overflow:auto;z-index:40;display:none}.results.show{display:block}.results div{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--line)}.results div:hover{background:var(--surface2)}.results .rk{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .spacer{flex:1}
-.sources{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
-.sources .s{display:flex;align-items:center;gap:5px}.sources .s::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--safe);box-shadow:0 0 5px var(--safe)}
+.sources{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}.sources .s{display:flex;align-items:center;gap:5px}.sources .s::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--safe);box-shadow:0 0 5px var(--safe)}
 .clock{font-family:var(--mono);color:var(--text);font-size:12px;letter-spacing:.05em}
 .mapwrap{position:relative;min-width:0;overflow:hidden}#map{position:absolute;inset:0}.maplibregl-ctrl-attrib{font-size:9px;opacity:.45}
-/* left drawer */
-.rail{position:absolute;top:0;left:0;bottom:0;width:312px;background:rgba(10,17,32,.96);border-right:1px solid var(--line);backdrop-filter:blur(8px);z-index:15;display:flex;flex-direction:column;transform:translateX(-104%);transition:transform .26s ease}
-.rail.open{transform:none}
-.rail h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:12px 14px 9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
-.rail h2 .x{cursor:pointer;color:var(--faint)}
+.rail{position:absolute;top:0;left:0;bottom:0;width:312px;background:rgba(10,17,32,.96);border-right:1px solid var(--line);backdrop-filter:blur(8px);z-index:15;display:flex;flex-direction:column;transform:translateX(-104%);transition:transform .26s ease}.rail.open{transform:none}
+.rail h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:12px 14px 9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.rail h2 .x{cursor:pointer;color:var(--faint)}
 .feed{overflow:auto;min-height:0}
 .alert{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;border-left:2px solid transparent}.alert:hover{background:var(--surface2)}.alert.sel{background:var(--surface2);border-left-color:var(--cyan)}
 .alert .r1{display:flex;justify-content:space-between;gap:8px}.alert .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.alert .tm{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .alert .r2{margin-top:4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:2px}.pill.threat{background:rgba(244,84,61,.16);color:#ff8a78;border:1px solid rgba(244,84,61,.4)}.pill.watch{background:rgba(242,180,65,.14);color:#ffce6e;border:1px solid rgba(242,180,65,.4)}
-/* map overlays */
 .tl{position:absolute;top:12px;left:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .btn{background:rgba(7,12,22,.85);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 11px;cursor:pointer}.btn:hover{border-color:var(--cyan)}
 .ov{font-family:var(--mono);font-size:10px;color:var(--muted);background:rgba(7,12,22,.72);border:1px solid var(--line);border-radius:4px;padding:6px 10px;letter-spacing:.04em}.ov b{color:var(--cyan)}
 .layers{background:var(--surface);border:1px solid var(--line2);border-radius:4px;padding:8px 4px;display:none;min-width:180px}.layers.show{display:block}.layers label{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:12px;cursor:pointer}.layers label:hover{background:var(--surface2)}.layers input{accent-color:var(--cyan)}
 .legend{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:4px;padding:9px 11px;font-family:var(--mono);font-size:10px;backdrop-filter:blur(6px)}.legend .lr{display:flex;align-items:center;gap:7px;margin:3px 0;color:var(--muted)}.legend .tri{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--safe)}.legend .sw{width:11px;height:9px}
 .readout{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:3px;padding:4px 12px;letter-spacing:.07em}
-/* compact floating dossier (top-right) */
-.dz{position:absolute;top:12px;right:12px;width:344px;max-height:calc(100% - 24px);overflow:auto;z-index:7;background:rgba(8,14,26,.94);border:1px solid var(--line2);border-radius:6px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45)}
-.dz.hidden{display:none}
+.dz{position:absolute;top:12px;right:12px;width:344px;max-height:calc(100% - 24px);overflow:auto;z-index:7;background:rgba(8,14,26,.94);border:1px solid var(--line2);border-radius:6px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45)}.dz.hidden{display:none}
 .dz h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.dz h2 .x{cursor:pointer;color:var(--faint)}
 .idcard{padding:12px 14px}.idcard .nm{font-size:19px;font-weight:700}.idcard .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin-top:10px;font-size:12px}.kv .k{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;align-self:center}.kv .v{font-family:var(--mono)}
@@ -71,9 +63,7 @@
   </div>
   <div class="mapwrap">
     <div id="map"></div>
-    <!-- left alert drawer -->
     <aside class="rail" id="rail"><h2>Live Alerts · Gulf of Finland <span class="x" id="railx">✕</span></h2><div class="feed" id="feed"></div></aside>
-    <!-- top-left controls -->
     <div class="tl">
       <button class="btn" id="lb">≡ Layers</button>
       <div class="layers" id="lp">
@@ -93,7 +83,6 @@
       <div class="lr"><span class="sw" style="background:#5E6B85;height:2px"></span>telecom cable</div>
     </div>
     <div class="readout" id="ro">59.800 N · 025.600 E</div>
-    <!-- compact floating dossier -->
     <aside class="dz" id="dz"><h2>Dossier <span class="x" id="dzx">✕</span></h2>
       <div class="idcard"><div class="nm" id="d_name">—</div><div class="sub" id="d_sub"></div>
         <div class="kv"><div class="k">Flag</div><div class="v" id="d_flag">—</div><div class="k">Speed</div><div class="v" id="d_speed">—</div><div class="k">Near</div><div class="v" id="d_cable">—</div><div class="k">Origin</div><div class="v" id="d_origin">—</div></div></div>
@@ -102,39 +91,40 @@
       <button class="launch" id="launch">▶ Launch Investigation</button>
       <div class="agents" id="agents"></div>
       <div class="verdict" id="verdict"><div class="story" id="v_story"></div><div class="rec"><b>Recommended action</b><span id="v_rec"></span></div>
-        <div class="voice"><div class="play">▶</div><div class="wave"></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">briefing 0:14</span></div></div>
+        <div class="voice" id="voice"><div class="play">▶</div><div class="wave"></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="v_voicelbl">play briefing</span></div></div>
     </aside>
   </div>
 </div>
 <script>
-const D=window.BS_DATA||{vessels:{features:[]},cables:{features:[]},jamming:{features:[]}};
+// Backend base URL: override with ?api=https://your-tunnel  (default localhost). Live-first, static-fallback.
+const BACKEND=new URLSearchParams(location.search).get('api')||'http://localhost:8000';
+const D=window.BS_DATA||{vessels:{type:'FeatureCollection',features:[]},cables:{type:'FeatureCollection',features:[]},jamming:{type:'FeatureCollection',features:[]}};
 const RC={safe:"#3FB68B",watch:"#F2B441",threat:"#F4543D"};
-const EAGLE={name:"Eagle S",lon:24.92,lat:59.71};
+const EAGLE={name:"Eagle S",mmsi:"518998000",lon:24.92,lat:59.71};
 const TRACK_A=[[28.4,59.65],[27.6,59.69],[26.7,59.72],[26.0,59.72]],TRACK_GAP=[[26.0,59.72],[25.5,59.71],[25.1,59.71]],TRACK_B=[[25.1,59.71],[25.0,59.71],[24.92,59.71]];
-const AGENTS=[{n:"Identity & Flag",c:"+10",f:"Cook Islands flag of convenience. Profile matches Russian shadow-fleet tanker."},{n:"Behavior",c:"+35",f:"Slow drift at 1.6 kn inside the Estlink 2 corridor. Inconsistent with normal transit."},{n:"Sanctions & Record",c:"+30",f:"OpenSanctions hit: mare.shadow;poi (shadow fleet + person of interest)."},{n:"GPS Environment",c:"+15",f:"Inside an active GPS-jamming zone. AIS position cannot be trusted here."}];
-D.vessels.features.forEach(f=>{f.properties.__lon=f.geometry.coordinates[0];f.properties.__lat=f.geometry.coordinates[1];});
-function tick(){document.getElementById('clock').textContent=new Date().toISOString().substr(11,8)+" UTC";}setInterval(tick,1000);tick();
+const SIM_AGENTS=[{n:"Identity & Flag",c:"+10",f:"Cook Islands flag of convenience. Profile matches Russian shadow-fleet tanker."},{n:"Behavior",c:"+35",f:"Slow drift at 1.6 kn inside the Estlink 2 corridor. Inconsistent with normal transit."},{n:"Sanctions & Record",c:"+30",f:"OpenSanctions hit: mare.shadow;poi (shadow fleet + person of interest)."},{n:"GPS Environment",c:"+15",f:"Inside an active GPS-jamming zone. AIS position cannot be trusted here."}];
+function ensure(fc){(fc.features||[]).forEach(f=>{f.properties.__lon=f.geometry.coordinates[0];f.properties.__lat=f.geometry.coordinates[1];});return fc;}
+ensure(D.vessels);
+let VES=D.vessels, liveOk=false, curMmsi=EAGLE.mmsi, curVoice="";
+function tier(r){const s=r.suspicion_score||0;return (r.is_candidate||s>=50)?'threat':(s>=25?'watch':'safe');}
+function rowsToFC(rows){return ensure({type:'FeatureCollection',features:(rows||[]).filter(r=>r.last_lat!=null&&r.last_lon!=null).map(r=>({type:'Feature',properties:{name:r.name||r.mmsi,mmsi:r.mmsi,imo:r.imo,shiptype:r.ship_type,flag:r.flag,risk:tier(r),score:Math.round(r.suspicion_score||0),course:r.last_course||0,speed:r.last_speed,reasons:r.suspicion_reasons||[]},geometry:{type:'Point',coordinates:[r.last_lon,r.last_lat]}}))});}
+const $=id=>document.getElementById(id),d=(id,v)=>$(id).textContent=v;
+function tick(){$('clock').textContent=new Date().toISOString().substr(11,8)+" UTC";}setInterval(tick,1000);tick();
 // feed
-const feed=document.getElementById('feed');
-const tAgo=i=>new Date(Date.now()-i*71000).toISOString().substr(11,8);
-const flagged=D.vessels.features.filter(f=>f.properties.risk!=='safe').sort((a,b)=>b.properties.score-a.properties.score);
-const aList=[{name:"Eagle S",risk:"threat",rule:"slow_near_cable · Estlink 2",eagle:true}].concat(flagged.slice(0,20).map(f=>({name:f.properties.name,risk:f.properties.risk,rule:(f.properties.reasons&&f.properties.reasons[0])||"elevated",props:f.properties})));
-aList.forEach((a,i)=>{const el=document.createElement('div');el.className='alert'+(a.eagle?' sel':'');el.innerHTML=`<div class="r1"><span class="nm">${a.name}</span><span class="tm">${tAgo(i)}</span></div><div class="r2"><span class="pill ${a.risk}">${a.risk.toUpperCase()}</span> ${a.rule}</div>`;
-  el.onclick=()=>{document.querySelectorAll('.alert').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');openDz();if(a.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(a.props.__lon,a.props.__lat,8.4);selGen(a.props);}};feed.appendChild(el);});
-document.getElementById('vc').textContent=D.vessels.features.length+" vessels";
-document.getElementById('cc').textContent=(flagged.filter(f=>f.properties.risk==='threat').length+1)+" candidate(s)";
-// drawer + dossier toggles
-const rail=document.getElementById('rail');
-document.getElementById('menu').onclick=()=>rail.classList.toggle('open');
-document.getElementById('railx').onclick=()=>rail.classList.remove('open');
-const dz=document.getElementById('dz');function openDz(){dz.classList.remove('hidden');}
-document.getElementById('dzx').onclick=()=>dz.classList.add('hidden');
+function renderFeed(){const feed=$('feed');const flagged=VES.features.filter(f=>f.properties.risk!=='safe').sort((a,b)=>b.properties.score-a.properties.score);
+  const aList=[{name:"Eagle S",risk:"threat",rule:"slow_near_cable · Estlink 2",eagle:true}].concat(flagged.slice(0,20).map(f=>({name:f.properties.name,risk:f.properties.risk,rule:(f.properties.reasons&&f.properties.reasons[0])||"elevated",props:f.properties})));
+  feed.innerHTML='';aList.forEach((a,i)=>{const el=document.createElement('div');el.className='alert'+(a.eagle&&curMmsi===EAGLE.mmsi?' sel':'');el.innerHTML=`<div class="r1"><span class="nm">${a.name}</span><span class="tm">${new Date(Date.now()-i*71000).toISOString().substr(11,8)}</span></div><div class="r2"><span class="pill ${a.risk}">${a.risk.toUpperCase()}</span> ${a.rule}</div>`;
+    el.onclick=()=>{document.querySelectorAll('.alert').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');openDz();if(a.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(a.props.__lon,a.props.__lat,8.4);selGen(a.props);}};feed.appendChild(el);});
+  d('vc',VES.features.length+" vessels");$('cc').innerHTML=(flagged.filter(f=>f.properties.risk==='threat').length+1)+" candidate(s) · "+(liveOk?'<b style="color:var(--safe)">live</b>':'<span style="color:var(--watch)">demo</span>');}
+const rail=$('rail');$('menu').onclick=()=>rail.classList.toggle('open');$('railx').onclick=()=>rail.classList.remove('open');
+const dz=$('dz');function openDz(){dz.classList.remove('hidden');}$('dzx').onclick=()=>dz.classList.add('hidden');
 // map
 const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[25.6,59.8],zoom:7.2,attributionControl:{compact:true}});
 map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
 function fly(lon,lat,z){map.flyTo({center:[lon,lat],zoom:z||8.2,speed:0.8});}
 function triImg(n,fill){const s=26,c=document.createElement('canvas');c.width=s;c.height=s;const x=c.getContext('2d');x.beginPath();x.moveTo(s/2,2);x.lineTo(s-5,s-4);x.lineTo(5,s-4);x.closePath();x.fillStyle=fill;x.fill();x.lineWidth=1.4;x.strokeStyle='rgba(7,12,22,.9)';x.stroke();map.addImage(n,x.getImageData(0,0,s,s));}
 function circle(lon,lat,km){const p=[],dLat=km/110.574,dLon=km/(111.32*Math.cos(lat*Math.PI/180));for(let i=0;i<=64;i++){const t=2*Math.PI*i/64;p.push([lon+dLon*Math.cos(t),lat+dLat*Math.sin(t)]);}return{type:'Feature',geometry:{type:'LineString',coordinates:p}};}
+async function loadVessels(){try{const r=await fetch(`${BACKEND}/vessels`,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();const fc=rowsToFC(j.vessels||[]);if(fc.features.length){VES=fc;liveOk=true;const s=map.getSource('ves');if(s)s.setData(VES);renderFeed();}}catch(e){liveOk=false;renderFeed();}}
 map.on('load',()=>{
   try{map.setProjection({type:'globe'});}catch(e){}
   map.addSource('jam',{type:'geojson',data:D.jamming});map.addLayer({id:'jam-f',type:'fill',source:'jam',paint:{'fill-color':'#6B7FD7','fill-opacity':0.09}});
@@ -147,10 +137,10 @@ map.on('load',()=>{
   aL('tA',TRACK_A,{'line-color':'#F4543D','line-width':2,'line-opacity':0.7});aL('tGap',TRACK_GAP,{'line-color':'#8595AD','line-width':2,'line-dasharray':[1.5,2],'line-opacity':0.85});aL('tB',TRACK_B,{'line-color':'#F4543D','line-width':2.4,'line-opacity':0.95});
   [10,20,40].forEach((km,i)=>{map.addSource('rr'+i,{type:'geojson',data:circle(EAGLE.lon,EAGLE.lat,km)});map.addLayer({id:'rr'+i,type:'line',source:'rr'+i,paint:{'line-color':'#4CC9E6','line-opacity':0.22-i*0.05,'line-width':0.8,'line-dasharray':[2,3]}});});
   triImg('tri-safe',RC.safe);triImg('tri-watch',RC.watch);triImg('tri-threat',RC.threat);
-  map.addSource('ves',{type:'geojson',data:D.vessels});
+  map.addSource('ves',{type:'geojson',data:VES});
   map.addLayer({id:'ves',type:'symbol',source:'ves',layout:{'icon-image':['match',['get','risk'],'safe','tri-safe','watch','tri-watch','threat','tri-threat','tri-safe'],'icon-rotate':['get','course'],'icon-rotation-alignment':'map','icon-size':0.55,'icon-allow-overlap':true}});
   map.addLayer({id:'ves-lab',type:'symbol',source:'ves',filter:['!=',['get','risk'],'safe'],layout:{'visibility':'none','text-field':['get','name'],'text-font':['Open Sans Regular','Arial Unicode MS Regular'],'text-size':10,'text-offset':[0,1.1],'text-anchor':'top'},paint:{'text-color':'#CDD8EA','text-halo-color':'#070C16','text-halo-width':1.3}});
-  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?JSON.parse(p.reasons):[];p.__lon=e.lngLat.lng;p.__lat=e.lngLat.lat;openDz();selGen(p);});
+  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?(typeof p.reasons==='string'?JSON.parse(p.reasons):p.reasons):[];p.__lon=e.lngLat.lng;p.__lat=e.lngLat.lat;openDz();selGen(p);});
   map.on('mouseenter','ves',()=>map.getCanvas().style.cursor='pointer');map.on('mouseleave','ves',()=>map.getCanvas().style.cursor='');
   const el=document.createElement('div');el.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite;cursor:pointer';el.onclick=()=>{fly(EAGLE.lon,EAGLE.lat,8.6);openDz();selEagle();};
   new maplibregl.Marker({element:el}).setLngLat([EAGLE.lon,EAGLE.lat]).addTo(map);
@@ -158,32 +148,42 @@ map.on('load',()=>{
   new maplibregl.Marker({element:op,anchor:'left'}).setLngLat([28.4,59.65]).addTo(map);
   const gl=document.createElement('div');gl.style.cssText='font-family:var(--mono);font-size:10px;color:#8595AD;text-shadow:0 1px 3px #000;white-space:nowrap';gl.textContent='⚠ AIS went dark';
   new maplibregl.Marker({element:gl}).setLngLat([25.55,59.78]).addTo(map);
+  renderFeed();loadVessels();setInterval(loadVessels,20000);
 });
-// coordinate readout on mouse move
-map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';document.getElementById('ro').textContent=Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+Math.abs(e.lngLat.lng).toFixed(3).padStart(7,'0')+' '+ew;});
-// layers
-document.getElementById('lb').onclick=()=>document.getElementById('lp').classList.toggle('show');
+map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';$('ro').textContent=Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+Math.abs(e.lngLat.lng).toFixed(3).padStart(7,'0')+' '+ew;});
+$('lb').onclick=()=>$('lp').classList.toggle('show');
 function setVis(ids,on){ids.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none');});}
-document.getElementById('L_cab').onchange=e=>setVis(['cab-tel','cab-pow','cab-rg','cab-r'],e.target.checked);
-document.getElementById('L_jam').onchange=e=>setVis(['jam-f'],e.target.checked);
-document.getElementById('L_lab').onchange=e=>setVis(['ves-lab'],e.target.checked);
-document.getElementById('L_rng').onchange=e=>setVis(['rr0','rr1','rr2'],e.target.checked);
-// mode toggle
+$('L_cab').onchange=e=>setVis(['cab-tel','cab-pow','cab-rg','cab-r'],e.target.checked);$('L_jam').onchange=e=>setVis(['jam-f'],e.target.checked);$('L_lab').onchange=e=>setVis(['ves-lab'],e.target.checked);$('L_rng').onchange=e=>setVis(['rr0','rr1','rr2'],e.target.checked);
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');const fish=b.dataset.m==='fish';setVis(['cab-tel','cab-pow','cab-rg','cab-r'],!fish);});
 // search
-const q=document.getElementById('q'),res=document.getElementById('res');
-q.oninput=()=>{const v=q.value.trim().toLowerCase();if(v.length<2){res.classList.remove('show');return;}let hits=[{name:'Eagle S',mmsi:'518998000',imo:'9329760',eagle:true}].concat(D.vessels.features.map(f=>f.properties)).filter(p=>(p.name||'').toLowerCase().includes(v)||String(p.mmsi||'').includes(v)||String(p.imo||'').includes(v)).slice(0,8);
+const q=$('q'),res=$('res');
+q.oninput=()=>{const v=q.value.trim().toLowerCase();if(v.length<2){res.classList.remove('show');return;}let hits=[{name:'Eagle S',mmsi:'518998000',imo:'9329760',eagle:true}].concat(VES.features.map(f=>f.properties)).filter(p=>(p.name||'').toLowerCase().includes(v)||String(p.mmsi||'').includes(v)||String(p.imo||'').includes(v)).slice(0,8);
   res.innerHTML=hits.map((h,i)=>`<div data-i="${i}">${h.name} <span class="rk">${h.risk?h.risk.toUpperCase()+' · ':''}MMSI ${h.mmsi||'?'}</span></div>`).join('');res.classList.add('show');
   [...res.children].forEach((c,i)=>c.onclick=()=>{const h=hits[i];res.classList.remove('show');q.value=h.name;openDz();if(h.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(h.__lon,h.__lat,8.6);selGen(h);}});};
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.classList.remove('show');});
 // dossier
-const agentsEl=document.getElementById('agents');const d=(id,v)=>document.getElementById(id).textContent=v;
-function setReasons(l){document.getElementById('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
-function renderAgents(){agentsEl.innerHTML='';AGENTS.forEach((a,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${a.n}</span><span class="ac" style="visibility:hidden">${a.c}</span></div><div class="af"><span class="sp">● awaiting…</span></div>`;agentsEl.appendChild(el);});}
-function selEagle(){d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');document.getElementById('d_fill').style.width='0';const lv=document.getElementById('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);document.getElementById('verdict').classList.remove('show');const b=document.getElementById('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';renderAgents();}
-function selGen(p){d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);document.getElementById('d_fill').style.width=(p.score||0)+'%';const lv=document.getElementById('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);document.getElementById('verdict').classList.remove('show');const b=document.getElementById('launch');b.style.display=t==='safe'?'none':'block';b.classList.remove('done');b.textContent='▶ Launch Investigation';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';}
-function runSwarm(){const b=document.getElementById('launch');b.classList.add('done');b.textContent='● Investigation running…';const lv=document.getElementById('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';let total=0;AGENTS.forEach((a,i)=>setTimeout(()=>{const el=document.getElementById('ag'+i);el.classList.add('live');el.querySelector('.af').innerHTML='<span class="sp">● querying source…</span>';setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=a.f;total+=parseInt(a.c.replace('+',''));d('d_score',total);document.getElementById('d_fill').style.width=total+'%';if(i===AGENTS.length-1)fin(total);},700);},i*900));}
-function fin(total){const lv=document.getElementById('d_level');lv.textContent='HIGH';lv.style.color='var(--threat)';document.getElementById('launch').textContent='✓ Investigation complete';const v=document.getElementById('verdict');v.classList.add('show');document.getElementById('v_story').textContent=`A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS can't be trusted. It went dark after leaving Ust-Luga. Score ${total}/100, confidence 0.86.`;document.getElementById('v_rec').textContent='Escalate to coast guard and notify the cable operator. Task an independent sensor to verify — AIS cannot be trusted in this corridor.';}
-document.getElementById('launch').onclick=()=>{const b=document.getElementById('launch');if(!b.classList.contains('done')&&b.textContent.indexOf('Launch')>=0)runSwarm();};
-openDz();selEagle();
+const agentsEl=$('agents');
+function setReasons(l){$('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
+function resetVerdict(){$('verdict').classList.remove('show');const b=$('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';}
+function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';}
+function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);$('d_fill').style.width=(p.score||0)+'%';const lv=$('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);resetVerdict();const b=$('launch');b.style.display=t==='safe'?'none':'block';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';}
+// --- REAL investigation (calls B's agents); falls back to a simulated swarm if backend down ---
+async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contains('done'))return;b.classList.add('done');b.textContent='● Investigation running…';const lv=$('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';
+  agentsEl.innerHTML='<div class="agent live" style="opacity:1;transform:none"><div class="ah"><span class="an">Investigator</span></div><div class="af"><span class="sp">● running Claude agents… (may take ~10-30s)</span></div></div>';
+  try{const r=await fetch(`${BACKEND}/agent/investigate/${mmsi}`,{method:'POST'});if(!r.ok)throw new Error('http '+r.status);const j=await r.json();if(!j.findings)throw new Error('no findings');renderFindings(j.findings,j.assessment||{});}
+  catch(e){console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
+function renderFindings(findings,a){agentsEl.innerHTML='';findings.forEach((f,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${f.agent||'Agent'}</span><span class="ac" style="visibility:hidden">sev ${(f.severity!=null?f.severity:0).toFixed(2)}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);
+    setTimeout(()=>{el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=f.finding||'';},500);},i*700);});
+  setTimeout(()=>finishVerdict(a),findings.length*700+700);}
+function finishVerdict(a){const conf=Math.round((a.confidence||0)*100);const lv=$('d_level');lv.textContent=a.level||'DONE';lv.style.color=a.level==='HIGH'?'var(--threat)':a.level==='MEDIUM'?'var(--watch)':'var(--safe)';
+  d('d_score',conf||$('d_score').textContent);if(conf)$('d_fill').style.width=conf+'%';$('launch').textContent='✓ Investigation complete';
+  const v=$('verdict');v.classList.add('show');$('v_story').textContent=a.summary||'';d('v_rec',a.recommended_action||'');
+  curVoice=a.voice_script||a.summary||'';$('v_voicelbl').textContent='▶ play spoken briefing';
+  if(a.reasoning&&a.reasoning.length)setReasons(a.reasoning);}
+// simulated fallback (offline / no backend)
+function simSwarm(){agentsEl.innerHTML='';SIM_AGENTS.forEach((a,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${a.n}</span><span class="ac" style="visibility:hidden">${a.c}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);});let total=0;
+  SIM_AGENTS.forEach((a,i)=>setTimeout(()=>{const el=$('ag'+i);el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=a.f;total+=parseInt(a.c.replace('+',''));d('d_score',total);$('d_fill').style.width=total+'%';if(i===SIM_AGENTS.length-1){const lv=$('d_level');lv.textContent='HIGH';lv.style.color='var(--threat)';$('launch').textContent='✓ Investigation complete (demo)';const v=$('verdict');v.classList.add('show');$('v_story').textContent='A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS is untrustworthy. It went dark after leaving Ust-Luga. Score 90/100, confidence 0.86.';d('v_rec','Escalate to coast guard and notify the cable operator. Task an independent sensor to verify.');curVoice='High risk alert. Suspicious vessel movement detected near Estlink 2. Recommend human escalation and independent verification.';$('v_voicelbl').textContent='▶ play spoken briefing';}},700);},i*900));}
+$('launch').onclick=()=>runInvestigation(curMmsi);
+$('voice').onclick=()=>{if(curVoice&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(curVoice);u.rate=1.0;u.pitch=0.9;speechSynthesis.cancel();speechSynthesis.speak(u);}};
+renderFeed();openDz();selEagle();
 </script></body></html>
