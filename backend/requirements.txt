@@ -11,6 +11,11 @@ confluent-kafka==2.6.1
 psycopg[binary]==3.2.3
 SQLAlchemy==2.0.36
 
+# Geo + data foundation — Person A
+shapely==2.0.6
+h3==4.1.0
+requests==2.32.3
+
 # Agents + voice — Person B, H5+
 anthropic==0.42.0
 elevenlabs==1.50.3
