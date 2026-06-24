@@ -184,6 +184,22 @@ Everything else is an upgrade.
   if risk rises. For the demo, simulate time passing (feed a second, worse
   position) so it visibly escalates on stage.
 
+### How the agent loop runs — decide at H5 (lean semi-autonomous + HITL)
+
+The Investigator's "brain" can run two ways, and BOTH plug into the same
+orchestrator + tools (Option A), so the H3-H5 fallback work is unaffected:
+
+- **Claude Managed Agent** — Anthropic runs the loop; free scheduling/state; the
+  challenge nudges toward it. Risk = the cloud→Aiven connectivity.
+- **Our own harness** — a raw Claude API tool-calling loop we run on the laptop
+  (a "workflow"). More control, keys stay local, easiest to make bulletproof
+  live. Smaller "Managed Agents" scoring nudge.
+
+Either way the system is **semi-autonomous with a human at the end**: the agent
+investigates and *recommends*; a human decides and acts. We do NOT build
+automatic enforcement (see §16). Pick the loop-runner at H5; nothing before then
+depends on it.
+
 ### What is real vs mock
 
 | Info | Source | Real or mock |
