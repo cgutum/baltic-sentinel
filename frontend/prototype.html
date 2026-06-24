@@ -61,6 +61,26 @@
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes hp{0%,100%{box-shadow:0 0 12px var(--threat)}50%{box-shadow:0 0 22px var(--threat)}}@keyframes sp{to{transform:rotate(360deg)}}
 .spin span{display:inline-block;animation:sp .8s linear infinite}
 ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+/* dossier — Gotham instrument refinement */
+.dz{border-radius:3px;background:rgba(7,12,22,.96);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+.dz h2{letter-spacing:.2em}
+.seclabel{font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--faint);text-transform:uppercase;padding:10px 14px 4px;border-top:1px solid var(--line)}
+.seclabel::before{content:"// ";color:var(--line2)}
+.idcard{padding:8px 14px 10px}
+.scorebar{margin:4px 14px 10px}
+.scorebar .lv{font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:2px 7px;border:1px solid currentColor;border-radius:2px}
+.scorebar .sc{font-size:25px}
+.trk{height:9px;border-radius:0;background:#0b1424;position:relative;overflow:hidden}
+.trk .fill{background:var(--threat)}
+.trk::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(7,12,22,.8) 6px 7px);pointer-events:none}
+.reasons{margin:4px 14px 0}
+.launch{border-radius:2px;background:transparent;border:1px solid var(--threat);color:#ff8a78;text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);font-size:12px;font-weight:500;position:relative;padding:11px}
+.launch::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--threat)}
+.launch:hover{background:rgba(244,84,61,.12);filter:none}
+.launch.done{border-color:var(--line2);color:var(--muted)}.launch.done::before{background:var(--line2)}
+.agent{border-radius:2px}.agent .an{font-family:var(--mono);font-size:11px;letter-spacing:.03em}
+.verdict{border-radius:2px}.verdict .rec{font-family:var(--mono)}.verdict .rec span{color:var(--text)}
+.voice{border-radius:2px}
 </style></head><body>
 <div class="app">
   <div class="topbar">
@@ -98,13 +118,17 @@
     </div>
     <div class="readout" id="ro">59.900 N · 026.250 E</div>
     <aside class="dz" id="dz"><h2>Dossier <span class="x" id="dzx">✕</span></h2>
+      <div class="seclabel">Identity</div>
       <div class="idcard"><div class="nm" id="d_name">—</div><div class="sub" id="d_sub"></div>
         <div class="kv"><div class="k">Flag</div><div class="v" id="d_flag">—</div><div class="k">Speed</div><div class="v" id="d_speed">—</div><div class="k">Near</div><div class="v" id="d_cable">—</div><div class="k">Origin</div><div class="v" id="d_origin">—</div></div></div>
-      <div class="scorebar"><div class="top"><span class="lv" id="d_level">—</span><span class="sc"><span id="d_score">0</span>/100</span></div><div class="trk"><div class="fill" id="d_fill"></div></div></div>
+      <div class="seclabel">Threat score</div>
+      <div class="scorebar"><div class="top"><span class="lv" id="d_level">—</span><span class="sc"><span id="d_score">0</span><span style="color:var(--faint)">/100</span></span></div><div class="trk"><div class="fill" id="d_fill"></div></div></div>
+      <div class="seclabel">Signals</div>
       <ul class="reasons" id="d_reasons"></ul>
       <button class="launch" id="launch">▶ Launch Investigation</button>
+      <div class="seclabel">Agent findings</div>
       <div class="agents" id="agents"></div>
-      <div class="verdict" id="verdict"><div class="story" id="v_story"></div><div class="rec"><b>Recommended action</b><span id="v_rec"></span></div>
+      <div class="verdict" id="verdict"><div class="seclabel" style="border-top:0;padding-top:2px">Watch-officer assessment</div><div class="story" id="v_story"></div><div class="rec"><b>Recommended action</b><span id="v_rec"></span></div>
         <div class="voice" id="voice"><div class="play">▶</div><div class="wave"></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="v_voicelbl">play briefing</span></div></div>
     </aside>
   </div>
