@@ -1,0 +1,60 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Baltic Sentinel — Civic</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<style>
+:root{--bg:#EEF1F6;--panel:#FFFFFF;--line:#DCE2EC;--text:#16203A;--muted:#5C6B86;--accent:#1763C7;--threat:#E03A24;--watch:#E08A12;--safe:#1F9E72;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Fraunces',Georgia,serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+#map{position:absolute;inset:96px 0 0 0}.maplibregl-ctrl-attrib{opacity:.5;font-size:9px}
+.bar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:14px;padding:0 20px;background:var(--panel);border-bottom:1px solid var(--line);z-index:10}
+.brand{font-weight:700;letter-spacing:.04em;font-size:15px;display:flex;align-items:center;gap:9px}.brand .d{width:10px;height:10px;border-radius:50%;background:var(--threat)}
+.nav{margin-left:auto;display:flex;gap:4px;font-size:12px}
+.nav a{color:var(--muted);text-decoration:none;padding:6px 11px;border-radius:6px}.nav a.on{background:var(--text);color:#fff;font-weight:600}.nav a:hover{background:#EEF1F6}
+.headline{position:absolute;top:54px;left:0;right:0;height:42px;display:flex;align-items:center;padding:0 20px;background:#FBFCFE;border-bottom:1px solid var(--line);z-index:9;font-size:14px}
+.headline b{color:var(--threat)}.headline .mut{color:var(--muted);margin-left:8px;font-size:12.5px}
+.card{position:absolute;top:112px;right:18px;width:360px;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 40px rgba(20,40,80,.12);overflow:hidden}
+.card .hd{padding:14px 16px;border-bottom:1px solid var(--line)}
+.card .nm{font-size:22px;font-weight:700}.card .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+.card .bd{padding:14px 16px}
+.flag{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#FDEEEA;color:var(--threat);border:1px solid #F6C9BF;padding:3px 9px;border-radius:999px;font-weight:600}
+.lead{font-family:var(--serif);font-size:18px;line-height:1.45;margin:12px 0 4px}
+.why{font-size:13px;color:#33405C;line-height:1.55}
+.why li{margin:5px 0}
+.matters{margin-top:13px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.matters b{color:var(--text);display:block;margin-bottom:3px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.chip{position:absolute;left:18px;bottom:18px;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:12px;box-shadow:0 6px 24px rgba(20,40,80,.1)}
+.chip b{font-size:20px;color:var(--threat)}
+</style></head><body>
+<div class="bar"><span class="brand"><span class="d"></span>Baltic Sentinel</span>
+ <span class="nav"><a href="gotham.html">Gotham</a><a href="recon.html">Recon</a><a class="on" href="civic.html">Civic</a><a href="../prototype.html">Full console</a></span></div>
+<div class="headline">⚠ <b style="margin-left:6px">1 vessel flagged</b> near the <b>Estlink 2</b> power cable<span class="mut">Gulf of Finland · live · <span id="vc">—</span> ships tracked</span></div>
+<div id="map"></div>
+<div class="chip">Threat level today<br><b>ELEVATED</b></div>
+<div class="card"><div class="hd"><div class="nm">Eagle&nbsp;S</div><div class="sub">Tanker · IMO 9329760 · drifting at 1.6 kn</div></div>
+<div class="bd"><span class="flag">⚑ Cook Islands · shadow fleet</span>
+  <div class="lead">A tanker is creeping over the cable that carries power between Finland and Estonia.</div>
+  <ul class="why">
+    <li>Moving at just 1.6 knots directly above the <b>Estlink 2</b> corridor.</li>
+    <li>On international <b>sanctions / detention</b> records.</li>
+    <li>Inside a <b>GPS-jamming zone</b>, so its own tracking can't be trusted.</li>
+    <li>It went dark after leaving <b>Ust-Luga</b> six days ago.</li>
+  </ul>
+  <div class="matters"><b>Why it matters</b>Estlink 2 carries up to 1,000 MW between two countries. If it is cut, the cost runs to tens of millions and weeks of repair.</div>
+</div></div>
+<script src="../prototype_data.js"></script><script src="_common.js"></script>
+<script>
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',center:[25.6,59.8],zoom:7.2,attributionControl:{compact:true}});
+map.addControl(new maplibregl.NavigationControl(),'bottom-right');
+document.getElementById('vc').textContent=BSV.D.vessels.features.length;
+map.on('load',()=>{
+  try{map.setProjection({type:'globe'});}catch(e){}
+  BSV.addCommon(map,{triSize:0.78,telecom:'#9AA7BD',jamOpacity:0.13});
+  // labels for flagged vessels
+  map.addLayer({id:'ves-lab',type:'symbol',source:'ves',filter:['!=',['get','risk'],'safe'],layout:{
+    'text-field':['get','name'],'text-font':['Open Sans Semibold','Arial Unicode MS Bold'],'text-size':11,'text-offset':[0,1.2],'text-anchor':'top'},
+    paint:{'text-color':'#16203A','text-halo-color':'#fff','text-halo-width':1.4}});
+  BSV.addEagle(map,()=>{const e=document.createElement('div');e.style.cssText='width:15px;height:15px;border-radius:50%;background:#E03A24;border:2px solid #fff;box-shadow:0 0 0 4px rgba(224,58,36,.25)';return e;});
+});
+</script></body></html>

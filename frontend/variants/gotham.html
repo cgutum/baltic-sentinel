@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Baltic Sentinel — Gotham</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<style>
+:root{--bg:#070C16;--line:#1B2740;--text:#CdD8EA;--muted:#7E8DA9;--cyan:#4CC9E6;--threat:#F4543D;--watch:#F2B441;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+#map{position:absolute;inset:42px 0 0 0}.maplibregl-ctrl-attrib{opacity:.4;font-size:9px}
+.bar{position:absolute;top:0;left:0;right:0;height:42px;display:flex;align-items:center;gap:14px;padding:0 14px;background:linear-gradient(180deg,#0A1120,#070C16);border-bottom:1px solid var(--line);z-index:10}
+.brand{font-weight:600;letter-spacing:.16em;font-size:12px}.brand b{color:#fff}.brand i{color:var(--cyan);font-style:normal;font-family:var(--mono);font-size:10px;margin-left:8px;letter-spacing:.1em}
+.nav{margin-left:auto;display:flex;gap:2px;font-family:var(--mono);font-size:11px}
+.nav a{color:var(--muted);text-decoration:none;padding:4px 9px;border:1px solid transparent;border-radius:3px}
+.nav a.on{color:#070C16;background:var(--cyan);font-weight:600}.nav a:hover{border-color:var(--line)}
+/* graticule readout */
+.readout{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:3px;padding:5px 12px;letter-spacing:.08em}
+.scan{position:absolute;top:54px;left:14px;z-index:6;font-family:var(--mono);font-size:10px;color:var(--muted);background:rgba(7,12,22,.7);border:1px solid var(--line);padding:6px 10px;border-radius:3px;letter-spacing:.06em}
+.scan b{color:var(--cyan)}
+/* compact dossier */
+.dz{position:absolute;top:54px;right:14px;width:330px;z-index:6;background:rgba(8,14,26,.92);border:1px solid var(--line);border-radius:4px;backdrop-filter:blur(8px);overflow:hidden}
+.dz h3{margin:0;padding:10px 12px;font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line)}
+.dz .bd{padding:12px}
+.dz .nm{font-size:18px;font-weight:700}.dz .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+.dz .sc{display:flex;justify-content:space-between;align-items:baseline;margin:11px 0 5px}
+.dz .lv{font-weight:700;letter-spacing:.1em;color:var(--threat)}.dz .scn{font-family:var(--mono);font-size:20px}
+.trk{height:5px;background:#0E1626;border:1px solid var(--line);border-radius:3px;overflow:hidden}.trk i{display:block;height:100%;width:90%;background:linear-gradient(90deg,var(--watch),var(--threat))}
+.rs{margin:10px 0 0;font-size:11px;color:var(--muted);line-height:1.5}.rs li{margin:3px 0;list-style:none}.rs li::before{content:'▸ ';color:var(--cyan)}
+.story{font-family:var(--serif);font-size:14px;line-height:1.45;color:#fff;margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+</style></head><body>
+<div class="bar"><span class="brand"><b>BALTIC</b> SENTINEL <i>GOTHAM</i></span>
+ <span class="nav"><a class="on" href="gotham.html">Gotham</a><a href="recon.html">Recon</a><a href="civic.html">Civic</a><a href="../prototype.html">Full console</a></span></div>
+<div id="map"></div>
+<div class="scan" id="scan">GULF OF FINLAND · <b id="vc">—</b> tracked · <b style="color:var(--threat)">1</b> candidate</div>
+<div class="readout" id="ro">59.800 N · 025.600 E</div>
+<div class="dz"><h3>Target Dossier</h3><div class="bd">
+  <div class="nm">Eagle S</div><div class="sub">IMO 9329760 · MMSI 518998000 · Tanker · 🇨🇰 Cook Islands</div>
+  <div class="sc"><span class="lv">HIGH</span><span class="scn">90/100</span></div><div class="trk"><i></i></div>
+  <ul class="rs"><li>Slow 1.6 kn inside Estlink 2 corridor</li><li>OpenSanctions: mare.shadow;poi</li><li>Inside GPS-jamming zone</li><li>Flag of convenience</li></ul>
+  <div class="story">Shadow-fleet tanker loitering over Estlink 2 inside a jamming zone. Went dark after Ust-Luga.</div>
+</div></div>
+<script src="../prototype_data.js"></script>
+<script src="_common.js"></script>
+<script>
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[25.6,59.8],zoom:7.3,attributionControl:{compact:true}});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+document.getElementById('vc').textContent=BSV.D.vessels.features.length;
+map.on('load',()=>{
+  try{map.setProjection({type:'globe'});}catch(e){}
+  // graticule
+  const lines=[];for(let lon=18;lon<=31;lon+=0.5)lines.push([[lon,57.5],[lon,62.5]]);for(let lat=58;lat<=62.5;lat+=0.5)lines.push([[18,lat],[31,lat]]);
+  map.addSource('grat',{type:'geojson',data:{type:'Feature',geometry:{type:'MultiLineString',coordinates:lines}}});
+  map.addLayer({id:'grat',type:'line',source:'grat',paint:{'line-color':'#4CC9E6','line-opacity':0.07,'line-width':0.5}});
+  BSV.addCommon(map,{triSize:0.5});
+  // range rings on candidate
+  [10,20,40].forEach((km,i)=>{map.addSource('rr'+i,{type:'geojson',data:BSV.circle(BSV.EAGLE.lon,BSV.EAGLE.lat,km)});
+    map.addLayer({id:'rr'+i,type:'line',source:'rr'+i,paint:{'line-color':'#4CC9E6','line-opacity':0.25-i*0.05,'line-width':0.8,'line-dasharray':[2,3]}});});
+  BSV.addEagle(map,()=>{const e=document.createElement('div');e.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite';return e;});
+});
+map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';
+  document.getElementById('ro').textContent=Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+String(Math.abs(e.lngLat.lng).toFixed(3)).padStart(7,'0')+' '+ew;});
+const st=document.createElement('style');st.textContent='@keyframes hp{0%,100%{box-shadow:0 0 12px #F4543D}50%{box-shadow:0 0 22px #F4543D}}';document.head.appendChild(st);
+</script></body></html>

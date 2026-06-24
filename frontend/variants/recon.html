@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Baltic Sentinel — Recon</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<style>
+:root{--bg:#060A12;--line:#1A2538;--text:#D7DEEA;--muted:#8595AD;--cyan:#4CC9E6;--threat:#F4543D;--watch:#F2B441;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden}
+#map{position:absolute;inset:42px 0 0 0}.maplibregl-ctrl-attrib{opacity:.4;font-size:9px}
+.vig{position:absolute;inset:42px 0 0 0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(3,6,12,.55) 100%)}
+.bar{position:absolute;top:0;left:0;right:0;height:42px;display:flex;align-items:center;gap:14px;padding:0 14px;background:linear-gradient(180deg,#0A0F1B,#060A12);border-bottom:1px solid var(--line);z-index:10}
+.brand{font-weight:600;letter-spacing:.16em;font-size:12px}.brand b{color:#fff}.brand i{color:var(--threat);font-style:normal;font-family:var(--mono);font-size:10px;margin-left:8px;letter-spacing:.1em}
+.nav{margin-left:auto;display:flex;gap:2px;font-family:var(--mono);font-size:11px}
+.nav a{color:var(--muted);text-decoration:none;padding:4px 9px;border:1px solid transparent;border-radius:3px}
+.nav a.on{color:#060A12;background:var(--threat);font-weight:600}.nav a:hover{border-color:var(--line)}
+.sweep{width:230px;height:230px;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,rgba(244,84,61,.34),rgba(244,84,61,0) 60deg,transparent 100%);animation:spin 4s linear infinite;mix-blend-mode:screen}
+.dot{position:absolute;left:50%;top:50%;width:13px;height:13px;margin:-6.5px;border-radius:50%;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 16px #F4543D}
+.cand{position:relative;width:230px;height:230px}
+.dz{position:absolute;bottom:18px;left:18px;width:340px;z-index:6;background:rgba(6,10,18,.86);border:1px solid var(--line);border-radius:6px;backdrop-filter:blur(10px);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+.dz .bd{padding:14px}
+.dz .nm{font-size:19px;font-weight:700}.dz .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
+.dz .lv{display:inline-block;margin-top:9px;font-family:var(--mono);font-size:11px;color:#fff;background:var(--threat);padding:2px 9px;border-radius:3px;letter-spacing:.08em}
+.story{font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.5;color:#fff;margin-top:11px}
+.scan{position:absolute;top:54px;left:18px;z-index:6;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-shadow:0 1px 4px #000}
+.scan b{color:var(--threat)}
+</style></head><body>
+<div class="bar"><span class="brand"><b>BALTIC</b> SENTINEL <i>RECON</i></span>
+ <span class="nav"><a href="gotham.html">Gotham</a><a class="on" href="recon.html">Recon</a><a href="civic.html">Civic</a><a href="../prototype.html">Full console</a></span></div>
+<div id="map"></div><div class="vig"></div>
+<div class="scan">GULF OF FINLAND · <b id="vc">—</b> contacts · <b>1</b> active threat</div>
+<div class="dz"><div class="bd">
+  <div class="nm">Eagle S <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">· tracking</span></div>
+  <div class="sub">IMO 9329760 · 🇨🇰 Cook Islands · 1.6 kn · over Estlink 2</div>
+  <span class="lv">THREAT · 90/100 · conf 0.86</span>
+  <div class="story">"A shadow-fleet tanker drifting over a power cable, in a zone where its own signal can't be trusted. It went dark after Ust-Luga."</div>
+</div></div>
+<script src="../prototype_data.js"></script><script src="_common.js"></script>
+<script>
+const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[25.4,59.78],zoom:7.7,pitch:32,attributionControl:{compact:true}});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+document.getElementById('vc').textContent=BSV.D.vessels.features.length;
+map.on('load',()=>{
+  try{map.setProjection({type:'globe'});}catch(e){}
+  BSV.addCommon(map,{glow:true,triSize:0.62,jamOpacity:0.16});
+  // sonar sweep marker on candidate
+  const wrap=document.createElement('div');wrap.className='cand';wrap.innerHTML='<div class="sweep"></div><div class="dot"></div>';
+  new maplibregl.Marker({element:wrap}).setLngLat([BSV.EAGLE.lon,BSV.EAGLE.lat]).addTo(map);
+  BSV.addEagle(map,()=>{const e=document.createElement('div');e.style.cssText='width:0;height:0';return e;}); // origin+label only
+  // pulse the at-risk cable
+  let t=0;function pulse(){t+=0.05;const o=0.6+0.35*Math.sin(t);try{map.setPaintProperty('cab-r','line-opacity',o);map.setPaintProperty('cab-rg','line-opacity',0.10+0.12*Math.sin(t));}catch(e){}requestAnimationFrame(pulse);}pulse();
+});
+const st=document.createElement('style');st.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(st);
+</script></body></html>
