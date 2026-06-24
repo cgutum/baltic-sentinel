@@ -9,99 +9,92 @@
 <script src="prototype_data.js"></script>
 <style>
 :root{--bg:#070C16;--surface:#0A1120;--surface2:#0E1626;--line:#1B2740;--line2:#283651;--text:#CDD8EA;--muted:#7E8DA9;--faint:#566480;
---safe:#3FB68B;--watch:#F2B441;--threat:#F4543D;--cyan:#4CC9E6;--jam:#6B7FD7;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif;--railw:300px;--dossw:420px}
+--safe:#3FB68B;--watch:#F2B441;--threat:#F4543D;--cyan:#4CC9E6;--jam:#6B7FD7;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;overflow:hidden}
 .app{display:grid;grid-template-rows:46px 1fr;height:100vh}
-.topbar{display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0A1120,#070C16);z-index:20}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0A1120,#070C16);z-index:30}
+.menu{background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-size:15px;line-height:1;padding:6px 9px;cursor:pointer}
+.menu:hover{border-color:var(--cyan)}
 .brand{font-weight:600;letter-spacing:.15em;font-size:12px;white-space:nowrap}.brand b{color:#fff}.brand .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--threat);box-shadow:0 0 9px var(--threat);margin-right:8px;animation:pulse 2s infinite}
-.seg{display:flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden;font-size:11px}
-.seg button{background:transparent;color:var(--muted);border:0;padding:5px 11px;cursor:pointer;font-family:var(--sans);letter-spacing:.03em}.seg button.on{background:var(--cyan);color:#06121a;font-weight:600}
-.search{position:relative;flex:0 1 320px;margin-left:6px}
-.search input{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px}
-.search input:focus{outline:none;border-color:var(--cyan)}
-.results{position:absolute;top:34px;left:0;right:0;background:var(--surface);border:1px solid var(--line2);border-radius:3px;max-height:300px;overflow:auto;z-index:40;display:none}
-.results.show{display:block}.results div{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--line)}.results div:hover{background:var(--surface2)}
-.results .rk{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.seg{display:flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden;font-size:11px}.seg button{background:transparent;color:var(--muted);border:0;padding:5px 11px;cursor:pointer;font-family:var(--sans)}.seg button.on{background:var(--cyan);color:#06121a;font-weight:600}
+.search{position:relative;flex:0 1 300px}.search input{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px}.search input:focus{outline:none;border-color:var(--cyan)}
+.results{position:absolute;top:34px;left:0;right:0;background:var(--surface);border:1px solid var(--line2);border-radius:3px;max-height:300px;overflow:auto;z-index:40;display:none}.results.show{display:block}.results div{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--line)}.results div:hover{background:var(--surface2)}.results .rk{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .spacer{flex:1}
-.src{display:flex;align-items:center;gap:13px}
-.stat{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
-.stat .led{width:7px;height:7px;border-radius:50%;background:var(--safe);box-shadow:0 0 6px var(--safe)}.stat .led.warn{background:var(--watch);box-shadow:0 0 6px var(--watch)}
+.sources{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.sources .s{display:flex;align-items:center;gap:5px}.sources .s::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--safe);box-shadow:0 0 5px var(--safe)}
 .clock{font-family:var(--mono);color:var(--text);font-size:12px;letter-spacing:.05em}
-.body{display:grid;grid-template-columns:var(--railw) 5px 1fr 5px var(--dossw);height:100%}
-.splitter{cursor:col-resize;position:relative;z-index:8}.splitter:hover,.splitter.drag{background:var(--cyan)}.splitter::after{content:"";position:absolute;inset:0 2px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-.rail{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
-.rail h2,.dossier h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:12px 14px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+.mapwrap{position:relative;min-width:0;overflow:hidden}#map{position:absolute;inset:0}.maplibregl-ctrl-attrib{font-size:9px;opacity:.45}
+/* left drawer */
+.rail{position:absolute;top:0;left:0;bottom:0;width:312px;background:rgba(10,17,32,.96);border-right:1px solid var(--line);backdrop-filter:blur(8px);z-index:15;display:flex;flex-direction:column;transform:translateX(-104%);transition:transform .26s ease}
+.rail.open{transform:none}
+.rail h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:12px 14px 9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.rail h2 .x{cursor:pointer;color:var(--faint)}
 .feed{overflow:auto;min-height:0}
 .alert{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;border-left:2px solid transparent}.alert:hover{background:var(--surface2)}.alert.sel{background:var(--surface2);border-left-color:var(--cyan)}
 .alert .r1{display:flex;justify-content:space-between;gap:8px}.alert .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.alert .tm{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .alert .r2{margin-top:4px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pill{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:2px}
-.pill.threat{background:rgba(244,84,61,.16);color:#ff8a78;border:1px solid rgba(244,84,61,.4)}.pill.watch{background:rgba(242,180,65,.14);color:#ffce6e;border:1px solid rgba(242,180,65,.4)}
-.mapwrap{position:relative;min-width:0}#map{position:absolute;inset:0}.maplibregl-ctrl-attrib{font-size:9px;opacity:.45}
-.legend{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:4px;padding:9px 11px;font-family:var(--mono);font-size:10px;backdrop-filter:blur(6px)}
-.legend .lr{display:flex;align-items:center;gap:7px;margin:3px 0;color:var(--muted)}.legend .tri{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--safe)}.legend .sw{width:11px;height:9px}
-.ov{position:absolute;top:12px;left:12px;z-index:5;font-family:var(--mono);font-size:10px;color:var(--muted);background:rgba(7,12,22,.72);border:1px solid var(--line);border-radius:4px;padding:6px 10px;letter-spacing:.04em}.ov b{color:var(--cyan)}
-.readout{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(7,12,22,.82);border:1px solid var(--line);border-radius:3px;padding:4px 11px;letter-spacing:.07em}
-.layersbtn{position:absolute;top:12px;right:12px;z-index:6;background:rgba(7,12,22,.85);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 11px;cursor:pointer}
-.layers{position:absolute;top:44px;right:12px;z-index:6;background:var(--surface);border:1px solid var(--line2);border-radius:4px;padding:8px 4px;display:none;min-width:170px}
-.layers.show{display:block}.layers label{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:12px;cursor:pointer}.layers label:hover{background:var(--surface2)}.layers input{accent-color:var(--cyan)}
-.footer{position:absolute;right:12px;bottom:12px;z-index:5;font-family:var(--mono);font-size:9px;color:var(--faint);text-align:right;line-height:1.5}
-.dossier{border-left:1px solid var(--line);background:var(--surface);overflow:auto;min-height:0;min-width:0}
-.idcard{padding:14px}.idcard .nm{font-size:20px;font-weight:700}.idcard .sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin-top:11px;font-size:12px}.kv .k{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;align-self:center}.kv .v{font-family:var(--mono)}
-.scorebar{margin:13px 14px 4px}.scorebar .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.scorebar .lv{font-weight:700;letter-spacing:.1em;color:var(--threat)}.scorebar .sc{font-family:var(--mono);font-size:22px;font-weight:600}
-.trk{height:6px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;overflow:hidden}.trk .fill{height:100%;width:0;background:linear-gradient(90deg,var(--watch),var(--threat));transition:width 1.1s ease}
-.reasons{margin:8px 14px 0;font-size:11.5px;color:var(--muted)}.reasons li{margin:3px 0;list-style:none}.reasons li::before{content:'▸ ';color:var(--cyan)}
-.launch{margin:14px;display:block;width:calc(100% - 28px);background:var(--threat);color:#fff;border:0;border-radius:3px;padding:11px;font-weight:600;letter-spacing:.04em;cursor:pointer;font-size:13px;font-family:var(--sans)}.launch:hover{filter:brightness(1.08)}.launch.done{background:var(--surface2);color:var(--muted);border:1px solid var(--line);cursor:default}
-.agents{padding:0 14px 6px}.agent{border:1px solid var(--line);border-left:2px solid var(--line2);border-radius:3px;padding:10px 11px;margin-bottom:8px;opacity:.4;transform:translateY(6px);transition:all .35s;background:var(--surface2)}
-.agent.live{opacity:1;transform:none;border-left-color:var(--cyan)}.agent.done{opacity:1;transform:none;border-left-color:var(--safe)}
-.agent .ah{display:flex;justify-content:space-between}.agent .an{font-weight:600;font-size:12px}.agent .ac{font-family:var(--mono);font-size:11px;color:var(--threat)}.agent .af{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.45}.agent .sp{font-family:var(--mono);font-size:10px;color:var(--cyan)}
-.verdict{margin:8px 14px 14px;border:1px solid rgba(244,84,61,.35);border-radius:4px;padding:13px;background:rgba(244,84,61,.06);opacity:0;transition:opacity .4s}.verdict.show{opacity:1}
-.verdict .story{font-family:var(--serif);font-size:16px;line-height:1.5;color:#fff}.verdict .rec{margin-top:10px;font-size:12px;border-top:1px solid var(--line);padding-top:9px}.verdict .rec b{color:var(--watch);font-family:var(--mono);font-size:10px;letter-spacing:.08em;display:block;text-transform:uppercase;margin-bottom:3px}
-.voice{margin-top:11px;display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;padding:8px 11px;cursor:pointer}.voice .play{width:24px;height:24px;border-radius:50%;background:var(--cyan);color:#06121a;display:flex;align-items:center;justify-content:center;font-size:11px}.voice .wave{flex:1;height:18px;background:repeating-linear-gradient(90deg,var(--line2) 0 2px,transparent 2px 5px)}
+.pill{display:inline-block;font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:2px}.pill.threat{background:rgba(244,84,61,.16);color:#ff8a78;border:1px solid rgba(244,84,61,.4)}.pill.watch{background:rgba(242,180,65,.14);color:#ffce6e;border:1px solid rgba(242,180,65,.4)}
+/* map overlays */
+.tl{position:absolute;top:12px;left:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.btn{background:rgba(7,12,22,.85);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 11px;cursor:pointer}.btn:hover{border-color:var(--cyan)}
+.ov{font-family:var(--mono);font-size:10px;color:var(--muted);background:rgba(7,12,22,.72);border:1px solid var(--line);border-radius:4px;padding:6px 10px;letter-spacing:.04em}.ov b{color:var(--cyan)}
+.layers{background:var(--surface);border:1px solid var(--line2);border-radius:4px;padding:8px 4px;display:none;min-width:180px}.layers.show{display:block}.layers label{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:12px;cursor:pointer}.layers label:hover{background:var(--surface2)}.layers input{accent-color:var(--cyan)}
+.legend{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:4px;padding:9px 11px;font-family:var(--mono);font-size:10px;backdrop-filter:blur(6px)}.legend .lr{display:flex;align-items:center;gap:7px;margin:3px 0;color:var(--muted)}.legend .tri{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid var(--safe)}.legend .sw{width:11px;height:9px}
+.readout{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;font-family:var(--mono);font-size:11px;color:var(--cyan);background:rgba(7,12,22,.85);border:1px solid var(--line);border-radius:3px;padding:4px 12px;letter-spacing:.07em}
+/* compact floating dossier (top-right) */
+.dz{position:absolute;top:12px;right:12px;width:344px;max-height:calc(100% - 24px);overflow:auto;z-index:7;background:rgba(8,14,26,.94);border:1px solid var(--line2);border-radius:6px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45)}
+.dz.hidden{display:none}
+.dz h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.dz h2 .x{cursor:pointer;color:var(--faint)}
+.idcard{padding:12px 14px}.idcard .nm{font-size:19px;font-weight:700}.idcard .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin-top:10px;font-size:12px}.kv .k{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;align-self:center}.kv .v{font-family:var(--mono)}
+.scorebar{margin:11px 14px 3px}.scorebar .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}.scorebar .lv{font-weight:700;letter-spacing:.1em;color:var(--threat)}.scorebar .sc{font-family:var(--mono);font-size:20px;font-weight:600}
+.trk{height:6px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;overflow:hidden}.trk .fill{height:100%;width:0;background:linear-gradient(90deg,var(--watch),var(--threat));transition:width 1.1s}
+.reasons{margin:7px 14px 0;font-size:11px;color:var(--muted)}.reasons li{margin:3px 0;list-style:none}.reasons li::before{content:'▸ ';color:var(--cyan)}
+.launch{margin:12px 14px;display:block;width:calc(100% - 28px);background:var(--threat);color:#fff;border:0;border-radius:3px;padding:10px;font-weight:600;letter-spacing:.04em;cursor:pointer;font-size:13px;font-family:var(--sans)}.launch:hover{filter:brightness(1.08)}.launch.done{background:var(--surface2);color:var(--muted);border:1px solid var(--line);cursor:default}
+.agents{padding:0 14px 4px}.agent{border:1px solid var(--line);border-left:2px solid var(--line2);border-radius:3px;padding:9px 10px;margin-bottom:7px;opacity:.4;transform:translateY(6px);transition:all .35s;background:var(--surface2)}.agent.live{opacity:1;transform:none;border-left-color:var(--cyan)}.agent.done{opacity:1;transform:none;border-left-color:var(--safe)}
+.agent .ah{display:flex;justify-content:space-between}.agent .an{font-weight:600;font-size:12px}.agent .ac{font-family:var(--mono);font-size:11px;color:var(--threat)}.agent .af{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.agent .sp{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.verdict{margin:6px 14px 14px;border:1px solid rgba(244,84,61,.35);border-radius:4px;padding:12px;background:rgba(244,84,61,.06);opacity:0;transition:opacity .4s}.verdict.show{opacity:1}
+.verdict .story{font-family:var(--serif);font-size:15px;line-height:1.5;color:#fff}.verdict .rec{margin-top:9px;font-size:11.5px;border-top:1px solid var(--line);padding-top:8px}.verdict .rec b{color:var(--watch);font-family:var(--mono);font-size:10px;letter-spacing:.08em;display:block;text-transform:uppercase;margin-bottom:3px}
+.voice{margin-top:10px;display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;padding:7px 10px;cursor:pointer}.voice .play{width:22px;height:22px;border-radius:50%;background:var(--cyan);color:#06121a;display:flex;align-items:center;justify-content:center;font-size:10px}.voice .wave{flex:1;height:16px;background:repeating-linear-gradient(90deg,var(--line2) 0 2px,transparent 2px 5px)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes hp{0%,100%{box-shadow:0 0 12px var(--threat)}50%{box-shadow:0 0 22px var(--threat)}}
-::-webkit-scrollbar{width:9px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
 </style></head><body>
 <div class="app">
   <div class="topbar">
+    <button class="menu" id="menu" title="Alerts">≡</button>
     <span class="brand"><span class="dot"></span><b>BALTIC</b> SENTINEL</span>
     <div class="seg" id="mode"><button class="on" data-m="infra">Infrastructure</button><button data-m="fish">Fisheries</button></div>
     <div class="search"><input id="q" placeholder="Search vessel · name / MMSI / IMO" autocomplete="off"><div class="results" id="res"></div></div>
     <div class="spacer"></div>
-    <div class="src">
-      <div class="stat"><span class="led"></span>Digitraffic</div>
-      <div class="stat"><span class="led"></span>Kafka</div>
-      <div class="stat"><span class="led"></span>OpenSanctions</div>
-      <div class="stat"><span class="led warn"></span>GPSJam</div>
-    </div>
+    <div class="sources"><span class="s">Digitraffic</span><span class="s">GPSJam</span><span class="s">OpenSanctions</span><span class="s">TeleGeography</span></div>
     <div class="clock" id="clock">--:--:-- UTC</div>
   </div>
-  <div class="body" id="bd">
-    <aside class="rail"><h2>Live Alerts · Gulf of Finland</h2><div class="feed" id="feed"></div></aside>
-    <div class="splitter" id="spL" title="drag · double-click to collapse"></div>
-    <div class="mapwrap">
-      <div id="map"></div>
-      <div class="ov">GULF OF FINLAND · <b id="vc">—</b> · <span id="cc">— candidate</span></div>
-      <button class="layersbtn" id="lb">≡ Layers</button>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <!-- left alert drawer -->
+    <aside class="rail" id="rail"><h2>Live Alerts · Gulf of Finland <span class="x" id="railx">✕</span></h2><div class="feed" id="feed"></div></aside>
+    <!-- top-left controls -->
+    <div class="tl">
+      <button class="btn" id="lb">≡ Layers</button>
       <div class="layers" id="lp">
         <label><input type="checkbox" id="L_cab" checked> Cable corridors</label>
         <label><input type="checkbox" id="L_jam" checked> GPS interference</label>
         <label><input type="checkbox" id="L_lab"> Vessel labels</label>
         <label><input type="checkbox" id="L_rng" checked> Range rings</label>
       </div>
-      <div class="legend">
-        <div class="lr"><span class="tri"></span>normal (heading)</div>
-        <div class="lr"><span class="tri" style="border-bottom-color:var(--watch)"></span>watch</div>
-        <div class="lr"><span class="tri" style="border-bottom-color:var(--threat)"></span>threat / candidate</div>
-        <div class="lr"><span class="sw" style="background:var(--jam);opacity:.5"></span>GPS interference (regional · daily)</div>
-        <div class="lr"><span class="sw" style="background:var(--watch);height:3px"></span>at-risk cable</div>
-        <div class="lr"><span class="sw" style="background:#5E6B85;height:2px"></span>telecom cable</div>
-      </div>
-      <div class="readout" id="ro">59.800 N · 025.600 E</div>
-      <div class="footer">sources: Digitraffic · GPSJam · OpenSanctions · TeleGeography</div>
+      <div class="ov">GULF OF FINLAND · <b id="vc">—</b> · <span id="cc">—</span></div>
     </div>
-    <div class="splitter" id="spR" title="drag · double-click to collapse"></div>
-    <aside class="dossier"><h2>Dossier</h2>
+    <div class="legend">
+      <div class="lr"><span class="tri"></span>normal (heading)</div>
+      <div class="lr"><span class="tri" style="border-bottom-color:var(--watch)"></span>watch</div>
+      <div class="lr"><span class="tri" style="border-bottom-color:var(--threat)"></span>threat / candidate</div>
+      <div class="lr"><span class="sw" style="background:var(--jam);opacity:.5"></span>GPS interference (regional · daily)</div>
+      <div class="lr"><span class="sw" style="background:var(--watch);height:3px"></span>at-risk cable</div>
+      <div class="lr"><span class="sw" style="background:#5E6B85;height:2px"></span>telecom cable</div>
+    </div>
+    <div class="readout" id="ro">59.800 N · 025.600 E</div>
+    <!-- compact floating dossier -->
+    <aside class="dz" id="dz"><h2>Dossier <span class="x" id="dzx">✕</span></h2>
       <div class="idcard"><div class="nm" id="d_name">—</div><div class="sub" id="d_sub"></div>
         <div class="kv"><div class="k">Flag</div><div class="v" id="d_flag">—</div><div class="k">Speed</div><div class="v" id="d_speed">—</div><div class="k">Near</div><div class="v" id="d_cable">—</div><div class="k">Origin</div><div class="v" id="d_origin">—</div></div></div>
       <div class="scorebar"><div class="top"><span class="lv" id="d_level">—</span><span class="sc"><span id="d_score">0</span>/100</span></div><div class="trk"><div class="fill" id="d_fill"></div></div></div>
@@ -127,9 +120,15 @@ const tAgo=i=>new Date(Date.now()-i*71000).toISOString().substr(11,8);
 const flagged=D.vessels.features.filter(f=>f.properties.risk!=='safe').sort((a,b)=>b.properties.score-a.properties.score);
 const aList=[{name:"Eagle S",risk:"threat",rule:"slow_near_cable · Estlink 2",eagle:true}].concat(flagged.slice(0,20).map(f=>({name:f.properties.name,risk:f.properties.risk,rule:(f.properties.reasons&&f.properties.reasons[0])||"elevated",props:f.properties})));
 aList.forEach((a,i)=>{const el=document.createElement('div');el.className='alert'+(a.eagle?' sel':'');el.innerHTML=`<div class="r1"><span class="nm">${a.name}</span><span class="tm">${tAgo(i)}</span></div><div class="r2"><span class="pill ${a.risk}">${a.risk.toUpperCase()}</span> ${a.rule}</div>`;
-  el.onclick=()=>{document.querySelectorAll('.alert').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');if(a.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(a.props.__lon,a.props.__lat,8.4);selGen(a.props);}};feed.appendChild(el);});
+  el.onclick=()=>{document.querySelectorAll('.alert').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');openDz();if(a.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(a.props.__lon,a.props.__lat,8.4);selGen(a.props);}};feed.appendChild(el);});
 document.getElementById('vc').textContent=D.vessels.features.length+" vessels";
 document.getElementById('cc').textContent=(flagged.filter(f=>f.properties.risk==='threat').length+1)+" candidate(s)";
+// drawer + dossier toggles
+const rail=document.getElementById('rail');
+document.getElementById('menu').onclick=()=>rail.classList.toggle('open');
+document.getElementById('railx').onclick=()=>rail.classList.remove('open');
+const dz=document.getElementById('dz');function openDz(){dz.classList.remove('hidden');}
+document.getElementById('dzx').onclick=()=>dz.classList.add('hidden');
 // map
 const map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:[25.6,59.8],zoom:7.2,attributionControl:{compact:true}});
 map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
@@ -138,68 +137,53 @@ function triImg(n,fill){const s=26,c=document.createElement('canvas');c.width=s;
 function circle(lon,lat,km){const p=[],dLat=km/110.574,dLon=km/(111.32*Math.cos(lat*Math.PI/180));for(let i=0;i<=64;i++){const t=2*Math.PI*i/64;p.push([lon+dLon*Math.cos(t),lat+dLat*Math.sin(t)]);}return{type:'Feature',geometry:{type:'LineString',coordinates:p}};}
 map.on('load',()=>{
   try{map.setProjection({type:'globe'});}catch(e){}
-  // jamming (soft regional wash, no hard outline)
-  map.addSource('jam',{type:'geojson',data:D.jamming});
-  map.addLayer({id:'jam-f',type:'fill',source:'jam',paint:{'fill-color':'#6B7FD7','fill-opacity':0.09}});
-  // cables
+  map.addSource('jam',{type:'geojson',data:D.jamming});map.addLayer({id:'jam-f',type:'fill',source:'jam',paint:{'fill-color':'#6B7FD7','fill-opacity':0.09}});
   map.addSource('cab',{type:'geojson',data:D.cables});
   map.addLayer({id:'cab-tel',type:'line',source:'cab',filter:['==',['get','kind'],'telecom'],paint:{'line-color':'#5E6B85','line-width':1,'line-opacity':0.4}});
   map.addLayer({id:'cab-pow',type:'line',source:'cab',filter:['all',['==',['get','kind'],'power'],['!=',['get','risk'],true]],paint:{'line-color':'#7F8CA3','line-width':1.6,'line-opacity':0.6,'line-dasharray':[2,2]}});
   map.addLayer({id:'cab-rg',type:'line',source:'cab',filter:['==',['get','risk'],true],paint:{'line-color':'#F2B441','line-width':10,'line-opacity':0.16,'line-blur':4}});
   map.addLayer({id:'cab-r',type:'line',source:'cab',filter:['==',['get','risk'],true],paint:{'line-color':'#F2B441','line-width':2.6,'line-opacity':0.95}});
-  // eagle track
   const aL=(id,co,p)=>{map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:co}}});map.addLayer({id:id,type:'line',source:id,paint:p});};
   aL('tA',TRACK_A,{'line-color':'#F4543D','line-width':2,'line-opacity':0.7});aL('tGap',TRACK_GAP,{'line-color':'#8595AD','line-width':2,'line-dasharray':[1.5,2],'line-opacity':0.85});aL('tB',TRACK_B,{'line-color':'#F4543D','line-width':2.4,'line-opacity':0.95});
-  // range rings
   [10,20,40].forEach((km,i)=>{map.addSource('rr'+i,{type:'geojson',data:circle(EAGLE.lon,EAGLE.lat,km)});map.addLayer({id:'rr'+i,type:'line',source:'rr'+i,paint:{'line-color':'#4CC9E6','line-opacity':0.22-i*0.05,'line-width':0.8,'line-dasharray':[2,3]}});});
-  // vessels
   triImg('tri-safe',RC.safe);triImg('tri-watch',RC.watch);triImg('tri-threat',RC.threat);
   map.addSource('ves',{type:'geojson',data:D.vessels});
   map.addLayer({id:'ves',type:'symbol',source:'ves',layout:{'icon-image':['match',['get','risk'],'safe','tri-safe','watch','tri-watch','threat','tri-threat','tri-safe'],'icon-rotate':['get','course'],'icon-rotation-alignment':'map','icon-size':0.55,'icon-allow-overlap':true}});
   map.addLayer({id:'ves-lab',type:'symbol',source:'ves',filter:['!=',['get','risk'],'safe'],layout:{'visibility':'none','text-field':['get','name'],'text-font':['Open Sans Regular','Arial Unicode MS Regular'],'text-size':10,'text-offset':[0,1.1],'text-anchor':'top'},paint:{'text-color':'#CDD8EA','text-halo-color':'#070C16','text-halo-width':1.3}});
-  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?JSON.parse(p.reasons):[];p.__lon=e.lngLat.lng;p.__lat=e.lngLat.lat;selGen(p);});
+  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?JSON.parse(p.reasons):[];p.__lon=e.lngLat.lng;p.__lat=e.lngLat.lat;openDz();selGen(p);});
   map.on('mouseenter','ves',()=>map.getCanvas().style.cursor='pointer');map.on('mouseleave','ves',()=>map.getCanvas().style.cursor='');
-  // eagle marker + origin + label
-  const el=document.createElement('div');el.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite;cursor:pointer';el.onclick=()=>{fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();};
+  const el=document.createElement('div');el.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite;cursor:pointer';el.onclick=()=>{fly(EAGLE.lon,EAGLE.lat,8.6);openDz();selEagle();};
   new maplibregl.Marker({element:el}).setLngLat([EAGLE.lon,EAGLE.lat]).addTo(map);
   const op=document.createElement('div');op.style.cssText='display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:#F2B441;white-space:nowrap;text-shadow:0 1px 3px #000';op.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:#F2B441;box-shadow:0 0 8px #F2B441"></span>Ust-Luga · departed 6d ago';
   new maplibregl.Marker({element:op,anchor:'left'}).setLngLat([28.4,59.65]).addTo(map);
   const gl=document.createElement('div');gl.style.cssText='font-family:var(--mono);font-size:10px;color:#8595AD;text-shadow:0 1px 3px #000;white-space:nowrap';gl.textContent='⚠ AIS went dark';
   new maplibregl.Marker({element:gl}).setLngLat([25.55,59.78]).addTo(map);
 });
+// coordinate readout on mouse move
 map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';document.getElementById('ro').textContent=Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+Math.abs(e.lngLat.lng).toFixed(3).padStart(7,'0')+' '+ew;});
-// layers menu
+// layers
 document.getElementById('lb').onclick=()=>document.getElementById('lp').classList.toggle('show');
 function setVis(ids,on){ids.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none');});}
 document.getElementById('L_cab').onchange=e=>setVis(['cab-tel','cab-pow','cab-rg','cab-r'],e.target.checked);
 document.getElementById('L_jam').onchange=e=>setVis(['jam-f'],e.target.checked);
 document.getElementById('L_lab').onchange=e=>setVis(['ves-lab'],e.target.checked);
 document.getElementById('L_rng').onchange=e=>setVis(['rr0','rr1','rr2'],e.target.checked);
-// mode toggle (Infrastructure / Fisheries)
-document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  const fish=b.dataset.m==='fish';setVis(['cab-tel','cab-pow','cab-rg','cab-r'],!fish);document.getElementById('cc').textContent=fish?'fisheries mode — MPA/EEZ layers coming':document.getElementById('cc').textContent;});
+// mode toggle
+document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');const fish=b.dataset.m==='fish';setVis(['cab-tel','cab-pow','cab-rg','cab-r'],!fish);});
 // search
 const q=document.getElementById('q'),res=document.getElementById('res');
-q.oninput=()=>{const v=q.value.trim().toLowerCase();if(v.length<2){res.classList.remove('show');return;}
-  let hits=[{name:'Eagle S',mmsi:'518998000',imo:'9329760',eagle:true}].concat(D.vessels.features.map(f=>f.properties))
-    .filter(p=>(p.name||'').toLowerCase().includes(v)||String(p.mmsi||'').includes(v)||String(p.imo||'').includes(v)).slice(0,8);
-  res.innerHTML=hits.map((h,i)=>`<div data-i="${i}">${h.name} <span class="rk">${h.risk?h.risk.toUpperCase()+' · ':''}MMSI ${h.mmsi||'?'}</span></div>`).join('');
-  res.classList.add('show');[...res.children].forEach((c,i)=>c.onclick=()=>{const h=hits[i];res.classList.remove('show');q.value=h.name;if(h.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(h.__lon,h.__lat,8.6);selGen(h);}});};
+q.oninput=()=>{const v=q.value.trim().toLowerCase();if(v.length<2){res.classList.remove('show');return;}let hits=[{name:'Eagle S',mmsi:'518998000',imo:'9329760',eagle:true}].concat(D.vessels.features.map(f=>f.properties)).filter(p=>(p.name||'').toLowerCase().includes(v)||String(p.mmsi||'').includes(v)||String(p.imo||'').includes(v)).slice(0,8);
+  res.innerHTML=hits.map((h,i)=>`<div data-i="${i}">${h.name} <span class="rk">${h.risk?h.risk.toUpperCase()+' · ':''}MMSI ${h.mmsi||'?'}</span></div>`).join('');res.classList.add('show');
+  [...res.children].forEach((c,i)=>c.onclick=()=>{const h=hits[i];res.classList.remove('show');q.value=h.name;openDz();if(h.eagle){fly(EAGLE.lon,EAGLE.lat,8.6);selEagle();}else{fly(h.__lon,h.__lat,8.6);selGen(h);}});};
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.classList.remove('show');});
-// resizable
-function drag(id,vn,side){const sp=document.getElementById(id);const px=v=>parseInt(getComputedStyle(document.documentElement).getPropertyValue(v));let sx,sw;
-  sp.addEventListener('mousedown',e=>{sx=e.clientX;sw=px(vn);sp.classList.add('drag');const mv=ev=>{let d=ev.clientX-sx;if(side==='right')d=-d;document.documentElement.style.setProperty(vn,Math.max(0,Math.min(640,sw+d))+'px');map.resize();};const up=()=>{sp.classList.remove('drag');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);e.preventDefault();});
-  let col=0;sp.addEventListener('dblclick',()=>{const c=px(vn);if(c>10){col=c;document.documentElement.style.setProperty(vn,'0px');}else{document.documentElement.style.setProperty(vn,(col||320)+'px');}map.resize();});}
-drag('spL','--railw','left');drag('spR','--dossw','right');
 // dossier
-const agentsEl=document.getElementById('agents');
-const d=(id,v)=>document.getElementById(id).textContent=v;
+const agentsEl=document.getElementById('agents');const d=(id,v)=>document.getElementById(id).textContent=v;
 function setReasons(l){document.getElementById('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
 function renderAgents(){agentsEl.innerHTML='';AGENTS.forEach((a,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${a.n}</span><span class="ac" style="visibility:hidden">${a.c}</span></div><div class="af"><span class="sp">● awaiting…</span></div>`;agentsEl.appendChild(el);});}
 function selEagle(){d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');document.getElementById('d_fill').style.width='0';const lv=document.getElementById('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);document.getElementById('verdict').classList.remove('show');const b=document.getElementById('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';renderAgents();}
-function selGen(p){d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);document.getElementById('d_fill').style.width=(p.score||0)+'%';const lv=document.getElementById('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);document.getElementById('verdict').classList.remove('show');const b=document.getElementById('launch');b.style.display=t==='safe'?'none':'block';b.classList.remove('done');b.textContent='▶ Launch Investigation';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 14px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';}
+function selGen(p){d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);document.getElementById('d_fill').style.width=(p.score||0)+'%';const lv=document.getElementById('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);document.getElementById('verdict').classList.remove('show');const b=document.getElementById('launch');b.style.display=t==='safe'?'none':'block';b.classList.remove('done');b.textContent='▶ Launch Investigation';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';}
 function runSwarm(){const b=document.getElementById('launch');b.classList.add('done');b.textContent='● Investigation running…';const lv=document.getElementById('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';let total=0;AGENTS.forEach((a,i)=>setTimeout(()=>{const el=document.getElementById('ag'+i);el.classList.add('live');el.querySelector('.af').innerHTML='<span class="sp">● querying source…</span>';setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=a.f;total+=parseInt(a.c.replace('+',''));d('d_score',total);document.getElementById('d_fill').style.width=total+'%';if(i===AGENTS.length-1)fin(total);},700);},i*900));}
 function fin(total){const lv=document.getElementById('d_level');lv.textContent='HIGH';lv.style.color='var(--threat)';document.getElementById('launch').textContent='✓ Investigation complete';const v=document.getElementById('verdict');v.classList.add('show');document.getElementById('v_story').textContent=`A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS can't be trusted. It went dark after leaving Ust-Luga. Score ${total}/100, confidence 0.86.`;document.getElementById('v_rec').textContent='Escalate to coast guard and notify the cable operator. Task an independent sensor to verify — AIS cannot be trusted in this corridor.';}
 document.getElementById('launch').onclick=()=>{const b=document.getElementById('launch');if(!b.classList.contains('done')&&b.textContent.indexOf('Launch')>=0)runSwarm();};
-selEagle();
+openDz();selEagle();
 </script></body></html>
