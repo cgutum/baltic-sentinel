@@ -18,8 +18,8 @@ from fastapi.responses import JSONResponse, FileResponse
 
 router = APIRouter()
 
-# Frontend (served at GET /). backend/app/api/routes.py -> backend/app/web/index.html
-_UI_FILE = Path(__file__).resolve().parent.parent / "web" / "index.html"
+# Frontend (served at GET /): the Gotham watch console at repo/frontend/prototype.html
+_UI_FILE = Path(__file__).resolve().parents[3] / "frontend" / "prototype.html"
 
 # Simple per-vessel debounce so a double-click doesn't fire two investigations.
 _INVESTIGATE_DEBOUNCE_SEC = 5
@@ -201,5 +201,12 @@ def events():
 
 @router.get("/")
 def ui():
-    """Serve the watch-officer console (localhost frontend)."""
+    """Serve the Gotham watch console (frontend/prototype.html)."""
     return FileResponse(str(_UI_FILE))
+
+
+@router.get("/prototype_data.js")
+def ui_data():
+    """Serve the console's data bundle so it loads same-origin."""
+    return FileResponse(str(_UI_FILE.parent / "prototype_data.js"),
+                        media_type="application/javascript")

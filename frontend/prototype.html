@@ -97,7 +97,7 @@
 </div>
 <script>
 // Backend base URL: override with ?api=https://your-tunnel  (default localhost). Live-first, static-fallback.
-const BACKEND=new URLSearchParams(location.search).get('api')||'http://localhost:8000';
+const _api=new URLSearchParams(location.search).get('api');const BACKEND=_api!==null?_api:(location.protocol==='file:'?'http://localhost:8000':'');
 const D=window.BS_DATA||{vessels:{type:'FeatureCollection',features:[]},cables:{type:'FeatureCollection',features:[]},jamming:{type:'FeatureCollection',features:[]}};
 const RC={safe:"#3FB68B",watch:"#F2B441",threat:"#F4543D"};
 const EAGLE={name:"Eagle S",mmsi:"518998000",lon:24.92,lat:59.71};
