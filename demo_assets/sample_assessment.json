@@ -1,1 +1,14 @@
-{}
+{
+  "suspicion_id": "sus_eagle_s_demo",
+  "level": "HIGH",
+  "confidence": 0.86,
+  "summary": "Suspicious vessel movement detected near Estlink 2.",
+  "reasoning": [
+    "Eagle S loitered slowly inside the Estlink 2 corridor",
+    "Vessel is linked to the sanctioned shadow fleet",
+    "Critical undersea infrastructure is at risk",
+    "AIS/GPS trust may be degraded in the region"
+  ],
+  "recommended_action": "Escalate to a human watch officer and notify the cable operator. Do not take automatic action.",
+  "voice_script": "High risk alert. Suspicious vessel movement detected near Estlink 2. Eagle S, a vessel linked to the sanctioned shadow fleet, loitered over the cable corridor. Recommend human escalation and independent verification."
+}

@@ -11,11 +11,15 @@ Person B (agents):
 import datetime
 import time
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 router = APIRouter()
+
+# Frontend (served at GET /). backend/app/api/routes.py -> backend/app/web/index.html
+_UI_FILE = Path(__file__).resolve().parent.parent / "web" / "index.html"
 
 # Simple per-vessel debounce so a double-click doesn't fire two investigations.
 _INVESTIGATE_DEBOUNCE_SEC = 5
@@ -104,21 +108,98 @@ def investigate(mmsi: str):
     return {"ok": True, "suspicion_id": sid, "published_to": "vessel.suspicion", "dossier": dossier}
 
 
-# --- Person B (stubs until wired) -----------------------------------------
+# --- Person B (agent workflow) --------------------------------------------
+
+# In-memory cache of the most recent investigation (for /assessment/latest + the UI).
+_last_result: dict = {}
+# Per-vessel debounce so a double-click doesn't fire two Claude investigations.
+_AGENT_DEBOUNCE_SEC = 8
+_agent_debounce: dict[str, float] = {}
+
+
+def _suspicion_from_vessel(mmsi: str, v: dict) -> dict:
+    """Build a vessel.suspicion-shaped dict from a live vessel row for the agent."""
+    from app.data_pipeline import geo_rules
+
+    lat, lon = v.get("last_lat"), v.get("last_lon")
+    cable = geo_rules.cable_near(lat, lon) if lat is not None and lon is not None else None
+    score = v.get("suspicion_score") or 0
+    return {
+        "suspicion_id": "sus_" + uuid.uuid4().hex[:8],
+        "mmsi": mmsi, "imo": v.get("imo"), "name": v.get("name"),
+        "rule": "operator_launch", "cable": cable or "(none)",
+        "severity": round((score or 0) / 100, 2),
+        "summary": (f"Operator launched investigation on {v.get('name') or mmsi}. "
+                    f"Score {score}/100" + (f" near {cable}." if cable else ".")),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        # Extra context the agent sees via get_suspicion_event:
+        "flag": v.get("flag"),
+        "reasons": v.get("suspicion_reasons") or [],
+        "last_position": {"lat": lat, "lon": lon,
+                          "speed": v.get("last_speed"), "course": v.get("last_course")},
+    }
+
+
+@router.post("/agent/investigate/{mmsi}")
+def agent_investigate(mmsi: str):
+    """Run the Claude agent on a chosen vessel; return findings + assessment.
+
+    Synchronous (the UI shows a spinner). Debounced per vessel. Uses live vessel
+    data when Postgres is configured, else the canned Eagle S demo case.
+    """
+    from app import database
+    from app.agent_workflow import orchestrator, fallback_outputs
+
+    now = time.monotonic()
+    last = _agent_debounce.get(mmsi)
+    if last and now - last < _AGENT_DEBOUNCE_SEC and _last_result.get("mmsi") == mmsi:
+        return {"ok": True, "deduped": True, **_last_result}
+    _agent_debounce[mmsi] = now
+
+    v = database.get_vessel(mmsi) if database.is_configured() else None
+    if v:
+        suspicion = _suspicion_from_vessel(mmsi, v)
+        vessel = {"mmsi": mmsi, "name": v.get("name"), "flag": v.get("flag"),
+                  "score": v.get("suspicion_score")}
+    elif str(mmsi) == fallback_outputs.SAMPLE_SUSPICION["mmsi"]:
+        suspicion = fallback_outputs.SAMPLE_SUSPICION
+        vessel = {"mmsi": mmsi, "name": "Eagle S", "flag": "Cook Islands", "score": 85}
+    else:
+        return JSONResponse(status_code=404, content={
+            "ok": False, "error": "Unknown vessel (no live DB connected, and not the demo vessel)."})
+
+    result = orchestrator.run_once(suspicion)
+    payload = {"mmsi": mmsi, "vessel": vessel,
+               "findings": result["findings"], "assessment": result["assessment"]}
+    _last_result.clear()
+    _last_result.update(payload)
+    return {"ok": True, **payload}
+
 
 @router.get("/assessment/latest")
 def assessment_latest():
-    return JSONResponse(status_code=501,
-                        content={"ok": False, "todo": "assessment not implemented yet (Person B)"})
+    """Return the most recent investigation result (findings + assessment)."""
+    if _last_result:
+        return {"ok": True, **_last_result}
+    return JSONResponse(status_code=404, content={"ok": False, "error": "no investigation yet"})
 
 
 @router.get("/voice/latest")
 def voice_latest():
-    return JSONResponse(status_code=501,
-                        content={"ok": False, "todo": "voice not implemented yet (Person B)"})
+    """Return the latest voice briefing path. TODO real ElevenLabs (H13)."""
+    a = _last_result.get("assessment")
+    if a:
+        return {"ok": True, "voice_script": a.get("voice_script")}
+    return JSONResponse(status_code=404, content={"ok": False, "error": "no voice yet"})
 
 
 @router.get("/events")
 def events():
     return JSONResponse(status_code=501,
                         content={"ok": False, "todo": "events stream not implemented yet"})
+
+
+@router.get("/")
+def ui():
+    """Serve the watch-officer console (localhost frontend)."""
+    return FileResponse(str(_UI_FILE))

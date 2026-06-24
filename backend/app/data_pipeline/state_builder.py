@@ -38,8 +38,29 @@ def _state_from_msg(msg: dict) -> dict:
     }
 
 
+def _append_track(st: dict) -> None:
+    """Persist this position to the `tracks` table (best-effort).
+
+    Gives Person B's agents a REAL movement history per vessel instead of a mock
+    track. Best-effort: a write failure must not stop the consumer.
+    """
+    if not database.is_configured():
+        return
+    try:
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO tracks (mmsi,imo,name,lat,lon,speed,course,ts,source) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (st["mmsi"], st.get("imo"), st.get("name"), st["last_lat"], st["last_lon"],
+                 st.get("last_speed"), st.get("last_course"), st.get("last_seen"), "digitraffic"),
+            )
+            conn.commit()
+    except Exception as e:  # noqa: BLE001 — a bad track write must not kill the worker
+        print(f"[state_builder] track write failed: {e}")
+
+
 def handle(msg: dict) -> dict | None:
-    """Process one ais.raw message: score + upsert. Returns the record or None."""
+    """Process one ais.raw message: score + upsert + append track. Returns the record."""
     if not _valid(msg):
         return None
     st = _state_from_msg(msg)
@@ -50,6 +71,7 @@ def handle(msg: dict) -> dict | None:
     st["suspicion_reasons"] = reasons
     st["is_candidate"] = scoring.is_candidate(score)
     database.upsert_vessel(st)
+    _append_track(st)
     return st
 
 
