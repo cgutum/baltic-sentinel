@@ -14,6 +14,10 @@ product). No black-box ML.
          state_builder.sweep() — a silent vessel emits no message, so the gap
          can only be detected by a periodic scan, not reactively)
 
+Location/behaviour features (slow-near-cable, jammed, AIS-gap, anchor-drag) are
+SUPPRESSED inside ports/anchorages: a slow vessel in a harbour is normal traffic,
+not a cable threat. Only intrinsic vessel risk (sanctions, flag) counts in port.
+
 is_candidate when score >= THRESHOLD. Score is capped at 100.
 """
 import datetime
@@ -32,9 +36,9 @@ WEIGHTS = {
 }
 THRESHOLD = 50
 SLOW_KN = 3.0
-# A vessel at exactly 0 kn is docked/anchored (often in port zones that overlap our
-# corridors). Loiter / anchor-drag is SLOW BUT MOVING. Require movement to flag.
-MOVING_MIN_KN = 0.2
+# A vessel below this is effectively stationary (docked/anchored). Loiter / anchor-
+# drag is SLOW BUT MOVING, so require real movement to flag "slow near cable".
+MOVING_MIN_KN = 0.5
 AIS_GAP_MIN = 15
 ANCHOR_DRAG_MAX_KN = 4.0
 ANCHOR_DRAG_SPREAD_DEG = 60
@@ -72,14 +76,17 @@ def score_vessel(state: dict, track: list[dict] | None = None,
     reasons: list[str] = []
     lat, lon = state.get("last_lat"), state.get("last_lon")
     spd = state.get("last_speed")
-    cable = geo_rules.cable_near(lat, lon) if lat is not None and lon is not None else None
+    has_pos = lat is not None and lon is not None
+    cable = geo_rules.cable_near(lat, lon) if has_pos else None
+    in_port = geo_rules.port_near(lat, lon) if has_pos else False
+    near_cable = bool(cable) and not in_port  # cable-threat features only outside ports
 
-    # 1. Slow but MOVING over a cable corridor (excludes docked/anchored 0-kn ships)
-    if cable and spd is not None and MOVING_MIN_KN <= spd < SLOW_KN:
+    # 1. Slow but MOVING over a cable corridor (not docked, not in a harbour)
+    if near_cable and spd is not None and MOVING_MIN_KN <= spd < SLOW_KN:
         score += WEIGHTS["slow_near_cable"]
         reasons.append(f"Slow ({spd:.1f} kn) inside {cable} corridor")
 
-    # 2. Sanctions / detention record
+    # 2. Sanctions / detention record (intrinsic — counts everywhere)
     hit = sanctions.lookup(imo=state.get("imo"), name=state.get("name"))
     if hit and (hit.get("risk") or "").strip():
         score += WEIGHTS["sanctions"]
@@ -87,14 +94,14 @@ def score_vessel(state: dict, track: list[dict] | None = None,
 
     # 3. AIS gap (silent vessel near a cable) — only when `now` is supplied
     last_seen = _parse_ts(state.get("last_seen"))
-    if cable and now and last_seen:
+    if near_cable and now and last_seen:
         gap_min = (now - last_seen).total_seconds() / 60
         if gap_min >= AIS_GAP_MIN:
             score += WEIGHTS["ais_gap"]
             reasons.append(f"AIS silent {gap_min:.0f} min near {cable}")
 
     # 4. Anchor-drag signature: slow + erratic heading over a corridor
-    if cable and track and len(track) >= 3:
+    if near_cable and track and len(track) >= 3:
         speeds = [p["speed"] for p in track if p.get("speed") is not None]
         courses = [p["course"] for p in track if p.get("course") is not None]
         if speeds and courses and max(speeds) < ANCHOR_DRAG_MAX_KN:
@@ -104,11 +111,11 @@ def score_vessel(state: dict, track: list[dict] | None = None,
                 reasons.append(f"Erratic heading ({spread:.0f} deg) while slow over {cable}")
 
     # 5. Inside a GPS-jamming zone near a cable
-    if cable and lat is not None and gpsjam.in_jammed_zone(lat, lon):
+    if near_cable and gpsjam.in_jammed_zone(lat, lon):
         score += WEIGHTS["jammed"]
         reasons.append("Inside GPS-jamming zone; AIS unreliable here")
 
-    # 6. Flag of convenience
+    # 6. Flag of convenience (intrinsic — counts everywhere)
     flag = state.get("flag")
     if flag in FLAGS_OF_CONVENIENCE:
         score += WEIGHTS["foc"]

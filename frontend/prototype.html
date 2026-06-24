@@ -100,8 +100,8 @@
 const _api=new URLSearchParams(location.search).get('api');const BACKEND=_api!==null?_api:(location.protocol==='file:'?'http://localhost:8000':'');
 const D=window.BS_DATA||{vessels:{type:'FeatureCollection',features:[]},cables:{type:'FeatureCollection',features:[]},jamming:{type:'FeatureCollection',features:[]}};
 const RC={safe:"#3FB68B",watch:"#F2B441",threat:"#F4543D"};
-const EAGLE={name:"Eagle S",mmsi:"518998000",lon:24.92,lat:59.71};
-const TRACK_A=[[28.4,59.65],[27.6,59.69],[26.7,59.72],[26.0,59.72]],TRACK_GAP=[[26.0,59.72],[25.5,59.71],[25.1,59.71]],TRACK_B=[[25.1,59.71],[25.0,59.71],[24.92,59.71]];
+const EAGLE={name:"Eagle S",mmsi:"518998000",lon:26.25,lat:59.95};
+const TRACK_A=[[28.38,59.67],[27.8,59.74],[27.2,59.82]],TRACK_GAP=[[27.2,59.82],[26.8,59.88],[26.5,59.92]],TRACK_B=[[26.5,59.92],[26.35,59.94],[26.25,59.95]];
 const SIM_AGENTS=[{n:"Identity & Flag",c:"+10",f:"Cook Islands flag of convenience. Profile matches Russian shadow-fleet tanker."},{n:"Behavior",c:"+35",f:"Slow drift at 1.6 kn inside the Estlink 2 corridor. Inconsistent with normal transit."},{n:"Sanctions & Record",c:"+30",f:"OpenSanctions hit: mare.shadow;poi (shadow fleet + person of interest)."},{n:"GPS Environment",c:"+15",f:"Inside an active GPS-jamming zone. AIS position cannot be trusted here."}];
 function ensure(fc){(fc.features||[]).forEach(f=>{f.properties.__lon=f.geometry.coordinates[0];f.properties.__lat=f.geometry.coordinates[1];});return fc;}
 ensure(D.vessels);
@@ -145,9 +145,9 @@ map.on('load',()=>{
   const el=document.createElement('div');el.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite;cursor:pointer';el.onclick=()=>{fly(EAGLE.lon,EAGLE.lat,8.6);openDz();selEagle();};
   new maplibregl.Marker({element:el}).setLngLat([EAGLE.lon,EAGLE.lat]).addTo(map);
   const op=document.createElement('div');op.style.cssText='display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:#F2B441;white-space:nowrap;text-shadow:0 1px 3px #000';op.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:#F2B441;box-shadow:0 0 8px #F2B441"></span>Ust-Luga · departed 6d ago';
-  new maplibregl.Marker({element:op,anchor:'left'}).setLngLat([28.4,59.65]).addTo(map);
+  new maplibregl.Marker({element:op,anchor:'left'}).setLngLat([28.38,59.67]).addTo(map);
   const gl=document.createElement('div');gl.style.cssText='font-family:var(--mono);font-size:10px;color:#8595AD;text-shadow:0 1px 3px #000;white-space:nowrap';gl.textContent='⚠ AIS went dark';
-  new maplibregl.Marker({element:gl}).setLngLat([25.55,59.78]).addTo(map);
+  new maplibregl.Marker({element:gl}).setLngLat([26.85,59.86]).addTo(map);
   renderFeed();loadVessels();setInterval(loadVessels,20000);
 });
 map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';$('ro').textContent=Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+Math.abs(e.lngLat.lng).toFixed(3).padStart(7,'0')+' '+ew;});
