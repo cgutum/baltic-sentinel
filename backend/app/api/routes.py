@@ -14,11 +14,10 @@ router = APIRouter()
 
 @router.post("/replay/eagle-s")
 def replay_eagle_s():
-    """Start the Eagle S replay. TODO Person A (H3-H5)."""
-    return JSONResponse(
-        status_code=501,
-        content={"ok": False, "todo": "replay not implemented yet (Person A)"},
-    )
+    """Start the Eagle S replay (Person A)."""
+    from app.data_pipeline import replay_eagle_s as replay
+    result = replay.start()
+    return JSONResponse(content={"ok": True, **result})
 
 
 @router.get("/assessment/latest")
