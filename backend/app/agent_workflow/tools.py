@@ -42,10 +42,13 @@ def get_suspicion_event(suspicion_id: str | None = None) -> dict:
 
 
 def get_recent_track(mmsi: str) -> list[dict]:
-    """Return recent positions for a vessel.
+    """Recent positions for a vessel from the `tracks` table (oldest-first).
 
-    Reads the real `tracks` table when Postgres is configured; otherwise (and on
-    any DB error) returns a canned slow-drift track so the demo still runs.
+    When Postgres is configured we return the REAL track — which may be **empty**
+    if we haven't recorded positions for this vessel yet. We deliberately do NOT
+    fall back to mock data here, so the agents can never hallucinate movement
+    from canned positions. Only with no DB at all (pure local CLI demo) do we
+    return a canned slow-drift track.
     """
     if database.is_configured():
         try:
@@ -54,25 +57,146 @@ def get_recent_track(mmsi: str) -> list[dict]:
             with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(
                     "SELECT lat, lon, speed, course, ts FROM tracks "
-                    "WHERE mmsi = %s ORDER BY ts DESC LIMIT 8",
+                    "WHERE mmsi = %s ORDER BY ts DESC LIMIT 12",
                     (str(mmsi),),
                 )
                 rows = cur.fetchall()
-            if rows:
-                # Oldest-first so Claude reads the track in time order.
-                return [
-                    {"lat": r["lat"], "lon": r["lon"], "speed": r["speed"],
-                     "course": r["course"], "ts": str(r["ts"])}
-                    for r in reversed(rows)
-                ]
-        except Exception as e:  # noqa: BLE001 — fall back to mock, never break the run
-            print(f"[tools] get_recent_track DB read failed ({e}) — using mock track")
+            return [
+                {"lat": r["lat"], "lon": r["lon"], "speed": r["speed"],
+                 "course": r["course"], "ts": str(r["ts"])}
+                for r in reversed(rows)
+            ]  # may be [] — that's honest, not mock
+        except Exception as e:  # noqa: BLE001
+            print(f"[tools] get_recent_track DB read failed ({e}) — returning empty")
+            return []
+    # No DB (pure local demo / CLI only): canned slow-drift track.
     return [
         {"lat": 59.66, "lon": 24.90, "speed": 3.4, "course": 18},
         {"lat": 59.69, "lon": 24.91, "speed": 2.2, "course": 25},
         {"lat": 59.71, "lon": 24.92, "speed": 1.6, "course": 30},
         {"lat": 59.73, "lon": 24.93, "speed": 1.9, "course": 35},
     ]
+
+
+# --------------------------------------------------------------------------- #
+# Phase 1 — real tools that fetch NEW information (not in the suspicion packet)
+# --------------------------------------------------------------------------- #
+def _haversine_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    import math
+    r = 3440.065  # nautical miles
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * r * math.asin(min(1.0, math.sqrt(a)))
+
+
+def get_nearby_vessels(lat: float, lon: float, radius_nm: float = 10.0,
+                       limit: int = 8, exclude_mmsi: str | None = None) -> list[dict]:
+    """Other live vessels within radius_nm of a point (from the vessels table).
+
+    Powers spatial/pattern reasoning: a second loitering vessel, a cluster near
+    the cable, an escort. Empty when no DB or nothing nearby.
+    """
+    if not database.is_configured() or lat is None or lon is None:
+        return []
+    try:
+        import math
+        from psycopg.rows import dict_row
+
+        dlat = radius_nm / 60.0
+        dlon = radius_nm / (60.0 * max(0.1, math.cos(math.radians(lat))))
+        with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT mmsi,name,flag,ship_type,last_lat,last_lon,last_speed,"
+                "nav_status,suspicion_score,is_candidate FROM vessels "
+                "WHERE last_lat BETWEEN %s AND %s AND last_lon BETWEEN %s AND %s "
+                "AND mmsi <> %s",
+                (lat - dlat, lat + dlat, lon - dlon, lon + dlon, str(exclude_mmsi or "")),
+            )
+            rows = cur.fetchall()
+        out = []
+        for r in rows:
+            if r["last_lat"] is None or r["last_lon"] is None:
+                continue
+            d = _haversine_nm(lat, lon, r["last_lat"], r["last_lon"])
+            if d > radius_nm:
+                continue
+            out.append({
+                "mmsi": r["mmsi"], "name": r["name"], "flag": r["flag"],
+                "ship_type": r["ship_type"], "speed": r["last_speed"],
+                "nav_status": r["nav_status"], "score": r["suspicion_score"],
+                "is_candidate": r["is_candidate"], "distance_nm": round(d, 1),
+            })
+        out.sort(key=lambda v: v["distance_nm"])
+        return out[:limit]
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] get_nearby_vessels failed ({e})")
+        return []
+
+
+def get_vessel_history(mmsi: str) -> dict:
+    """Prior suspicion events for this vessel + how many track points we hold.
+
+    Powers temporal reasoning: repeat offender? prior incidents near cables?
+    """
+    if not database.is_configured():
+        return {"prior_suspicions": [], "track_points": 0}
+    try:
+        from psycopg.rows import dict_row
+
+        with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                "SELECT suspicion_id, rule, cable, severity, summary, ts "
+                "FROM suspicion_events WHERE mmsi = %s ORDER BY ts DESC LIMIT 5",
+                (str(mmsi),),
+            )
+            prior = [{**p, "ts": str(p["ts"])} for p in cur.fetchall()]
+            cur.execute("SELECT count(*) AS n FROM tracks WHERE mmsi = %s", (str(mmsi),))
+            n = cur.fetchone()["n"]
+        return {"prior_suspicions": prior, "track_points": n}
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] get_vessel_history failed ({e})")
+        return {"prior_suspicions": [], "track_points": 0}
+
+
+def get_sanctions_record(imo: str | None = None, name: str | None = None) -> dict:
+    """Real OpenSanctions maritime record (or {'listed': False}) via Person A's loader."""
+    try:
+        from ..data_pipeline.loaders import sanctions
+
+        row = sanctions.lookup(imo=imo, name=name)
+        if not row:
+            return {"listed": False}
+        return {
+            "listed": True,
+            "name": row.get("caption"),
+            "imo": row.get("imo"),
+            "risk": row.get("risk"),
+            "countries": row.get("countries"),
+            "datasets": row.get("datasets"),
+            "aliases": row.get("aliases"),
+        }
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] get_sanctions_record failed ({e})")
+        return {"listed": None, "error": str(e)}
+
+
+def validate_identity(mmsi: str | None = None, imo: str | None = None,
+                      name: str | None = None, flag: str | None = None) -> dict:
+    """Deterministic identity sanity checks (no Claude). Catches spoofed/invalid IDs."""
+    checks = []
+    digits = "".join(c for c in str(imo or "") if c.isdigit())
+    if not imo:
+        checks.append("No IMO number reported.")
+    elif len(digits) != 7:
+        checks.append(f"IMO '{imo}' is not the standard 7 digits — likely invalid or spoofed.")
+    else:
+        s = sum(int(digits[i]) * (7 - i) for i in range(6))
+        if s % 10 == int(digits[6]):
+            checks.append(f"IMO {imo} passes the IMO check-digit test.")
+        else:
+            checks.append(f"IMO {imo} FAILS the IMO check-digit test — likely invalid/spoofed.")
+    return {"mmsi": mmsi, "imo": imo, "name": name, "flag": flag, "checks": checks}
 
 
 def get_vessel_identity(mmsi: str, imo: str | None = None) -> dict:

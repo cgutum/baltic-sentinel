@@ -17,15 +17,11 @@ from . import fallback_outputs, tools
 
 def investigate(suspicion: dict) -> list[dict]:
     """Produce agent findings for a suspicion, publish/persist each one."""
-    # Option A round-trip: the orchestrator calls a tool and gets data back.
-    track = tools.get_recent_track(suspicion["mmsi"])
-    print(f"[orchestrator] tool get_recent_track -> {len(track)} points")
-
     if settings.demo_mode:
         results = fallback_outputs.findings(suspicion)
     else:
         from . import investigator
-        results = investigator.run(suspicion)  # real Claude loop; falls back on error
+        results = investigator.run(suspicion)  # parallel specialist team; falls back on error
 
     for finding in results:
         AgentFinding(**finding)  # drift guard vs contracts.md
