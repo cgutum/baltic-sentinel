@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     aiven_kafka_bootstrap: str = ""
     aiven_kafka_username: str = ""
     aiven_kafka_password: str = ""
+    aiven_kafka_ca: str = "backend/ca.pem"
 
     # Aiven Postgres
     aiven_postgres_url: str = ""
