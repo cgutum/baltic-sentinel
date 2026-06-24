@@ -1,0 +1,9 @@
+{
+  "name": "baltic-sentinel-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Baltic Sentinel demo UI (built H21+). See frontend/README.md.",
+  "scripts": {
+    "dev": "echo \"Frontend not scaffolded yet (H21+).\" && exit 0"
+  }
+}

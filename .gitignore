@@ -1,0 +1,13 @@
+.env
+*.pem
+*.key
+__pycache__/
+.venv/
+node_modules/
+
+# Extra safety
+*.pyc
+.pytest_cache/
+.DS_Store
+*.mp3
+!demo_assets/sample_voice.mp3
