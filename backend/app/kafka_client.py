@@ -101,8 +101,8 @@ def _producer_conf() -> dict:
     return _conf_base()
 
 
-def _consumer_conf(group_id: str) -> dict:
-    return {**_conf_base(), "group.id": group_id, "auto.offset.reset": "earliest"}
+def _consumer_conf(group_id: str, offset_reset: str = "earliest") -> dict:
+    return {**_conf_base(), "group.id": group_id, "auto.offset.reset": offset_reset}
 
 
 _producer = None
@@ -127,23 +127,39 @@ def publish(topic: str, message: dict) -> None:
     p.flush(5)
 
 
-def consume(topic: str, group_id: str | None = None):
+def consume(topic: str, group_id: str | None = None, offset_reset: str = "earliest"):
     """Yield decoded dict messages from a Kafka topic (blocking generator).
 
     group_id defaults to one per topic so each worker reads independently.
+    Logs partition assignment + a periodic poll/msg heartbeat so a silent
+    consumer (no assignment / no messages) is diagnosable in the deploy logs.
     Usage:  for msg in consume(TOPIC_VESSEL_SUSPICION): ...
     """
     if not is_configured():
         print(f"[kafka:stub] consume({topic}) — no broker configured yet")
         return
     from confluent_kafka import Consumer
-    c = Consumer(_consumer_conf(group_id or f"bsentinel-{topic}"))
-    c.subscribe([topic])
+    gid = group_id or f"bsentinel-{topic}"
+    c = Consumer(_consumer_conf(gid, offset_reset))
+
+    def _on_assign(_c, partitions):
+        desc = ", ".join(f"{p.topic}[{p.partition}]@{p.offset}" for p in partitions) or "(none)"
+        print(f"[kafka] {topic} group={gid} assigned: {desc}", flush=True)
+
+    c.subscribe([topic], on_assign=_on_assign)
+    polls = got = 0
     try:
         while True:
             msg = c.poll(1.0)
-            if msg is None or msg.error():
+            polls += 1
+            if polls % 30 == 0:
+                print(f"[kafka] {topic} group={gid}: {polls} polls, {got} msgs", flush=True)
+            if msg is None:
                 continue
+            if msg.error():
+                print(f"[kafka] {topic} poll error: {msg.error()}", flush=True)
+                continue
+            got += 1
             yield json.loads(msg.value().decode("utf-8"))
     finally:
         c.close()

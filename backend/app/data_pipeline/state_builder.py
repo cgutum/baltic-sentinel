@@ -107,7 +107,7 @@ def run() -> None:
     print("[state_builder] consuming ais.raw ...")
     database.init_tables()  # ensure vessels/tracks tables + indexes exist before writing
     threading.Thread(target=_sweep_loop, daemon=True).start()
-    for msg in consume(TOPIC_AIS_RAW, group_id="state_builder"):
+    for msg in consume(TOPIC_AIS_RAW, group_id="state_builder-v2", offset_reset="latest"):
         try:
             handle(msg)
         except Exception as e:  # noqa: BLE001 — a bad message must not kill the worker
