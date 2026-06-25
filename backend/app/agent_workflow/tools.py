@@ -447,6 +447,64 @@ def set_watch_status(mmsi: str, status: str) -> dict:
         return {"ok": False, "error": str(e)[:200]}
 
 
+def delete_watch(mmsi: str) -> dict:
+    """Operator removes a vessel from the watchlist entirely."""
+    if not database.is_configured():
+        return {"ok": False, "error": "database not configured"}
+    try:
+        _ensure_watchlist_table()
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM watchlist WHERE mmsi=%s", (mmsi,))
+            n = cur.rowcount
+            conn.commit()
+        print(f"[watchlist] {mmsi} -> DELETED ({n} row)", flush=True)
+        return {"ok": True, "mmsi": mmsi, "deleted": n}
+    except Exception as e:  # noqa: BLE001
+        print(f"[watchlist] delete_watch failed ({e})")
+        return {"ok": False, "error": str(e)[:200]}
+
+
+_sentmem_ready = False
+
+
+def _ensure_sentinel_memory() -> None:
+    """Ensure sentinel_memory exists WITH the structured columns (the Sentinel also
+    creates it via MCP; this guarantees the columns even on a pre-existing table)."""
+    global _sentmem_ready
+    if _sentmem_ready or not database.is_configured():
+        return
+    try:
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("CREATE TABLE IF NOT EXISTS sentinel_memory (id serial PRIMARY KEY, "
+                        "ts timestamptz DEFAULT now(), mmsi text, event_type text, "
+                        "headline text, cycle_note text)")
+            cur.execute("ALTER TABLE sentinel_memory ADD COLUMN IF NOT EXISTS event_type text")
+            cur.execute("ALTER TABLE sentinel_memory ADD COLUMN IF NOT EXISTS headline text")
+            conn.commit()
+        _sentmem_ready = True
+    except Exception as e:  # noqa: BLE001
+        print(f"[watchlist] ensure sentinel_memory ({e})")
+
+
+def get_sentinel_memory(mmsi: str, limit: int = 20) -> list[dict]:
+    """Read the Sentinel's own memory rows for a vessel (event_type / headline / detail
+    it wrote via the MCP). Empty if no cycle has run yet."""
+    if not database.is_configured():
+        return []
+    _ensure_sentinel_memory()
+    try:
+        from psycopg.rows import dict_row
+        with database.get_connection() as conn:
+            conn.read_only = True
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute("SELECT event_type, headline, cycle_note, ts FROM sentinel_memory "
+                            "WHERE mmsi=%s ORDER BY ts DESC LIMIT %s", (str(mmsi), int(limit)))
+                return cur.fetchall()
+    except Exception as e:  # noqa: BLE001
+        print(f"[watchlist] get_sentinel_memory ({e})")
+        return []
+
+
 def update_watch(mmsi: str, level: str | None = None, confidence: float | None = None,
                  status: str | None = None, note: str | None = None,
                  review_hours: int = 6) -> None:

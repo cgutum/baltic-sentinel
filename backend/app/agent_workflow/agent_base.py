@@ -23,6 +23,20 @@ MCP_ACTIVITY: "deque[dict]" = deque(maxlen=60)
 def _record_mcp(agent_name: str, tool: str, ok: bool | None = None) -> None:
     MCP_ACTIVITY.append({"agent": agent_name, "tool": tool, "ok": ok, "ts": time.time()})
 
+
+# Per-investigation live progress (mmsi -> list of step strings). Surfaced in the
+# /agent/result running response so the dossier can show a tasteful "working" line.
+PROGRESS: dict = {}
+
+
+def progress_reset(mmsi) -> None:
+    PROGRESS[str(mmsi)] = []
+
+
+def progress(mmsi, step: str) -> None:
+    PROGRESS.setdefault(str(mmsi), []).append(step)
+    print(f"[progress {mmsi}] {step}", flush=True)
+
 # Sub-agents run on the faster Sonnet by default (much lower latency); the Watch
 # Officer passes model="claude-opus-4-8" for the final verdict.
 DEFAULT_MODEL = "claude-sonnet-4-6"
