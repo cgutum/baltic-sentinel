@@ -4,8 +4,8 @@
 .env
 *.env
 **/.env
-ca.pem
 **/*.pem
+!backend/ca.pem
 __pycache__/
 **/__pycache__/
 *.pyc

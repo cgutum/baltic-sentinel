@@ -1,5 +1,6 @@
 .env
 *.pem
+!backend/ca.pem
 *.key
 __pycache__/
 .venv/
