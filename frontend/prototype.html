@@ -201,4 +201,49 @@ function simSwarm(){agentsEl.innerHTML='';SIM_AGENTS.forEach((a,i)=>{const el=do
 $('launch').onclick=()=>runInvestigation(curMmsi);
 $('voice').onclick=()=>{if(curVoice&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(curVoice);u.rate=1.0;u.pitch=0.9;speechSynthesis.cancel();speechSynthesis.speak(u);}};
 renderFeed();openDz();selEagle();
+
+// --- Sentinel: autonomous-monitor panel (self-contained) ------------------
+(function(){
+  const wrap=document.createElement('div');wrap.id='sentinel';
+  wrap.style.cssText='position:fixed;left:16px;bottom:16px;width:350px;max-height:48vh;overflow:auto;'
+   +'background:rgba(10,16,24,.95);border:1px solid #1d2a3a;border-radius:12px;padding:12px 14px;'
+   +'font:12px/1.45 system-ui,sans-serif;color:#cfe;z-index:9999;box-shadow:0 10px 34px rgba(0,0,0,.55)';
+  wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+   +'<b style="font-size:13px">🛰 Sentinel — autonomous monitor</b>'
+   +'<button id="snt_run" style="background:#0b6;border:0;color:#021;font-weight:700;border-radius:6px;'
+   +'padding:4px 9px;cursor:pointer">Run now</button></div>'
+   +'<div id="snt_status" style="color:#8ab;margin-bottom:6px">idle</div><div id="snt_list">loading…</div>';
+  document.body.appendChild(wrap);
+  const g=id=>document.getElementById(id);
+  const badge=l=>{const c=l==='HIGH'?'#e55':l==='MEDIUM'?'#fb3':'#5c6';return '<span style="color:'+c+';font-weight:700">'+(l||'—')+'</span>';};
+
+  async function load(){
+    try{
+      const r=await fetch(BACKEND+'/watchlist',{cache:'no-store'});const j=await r.json();const wl=(j&&j.watchlist)||[];
+      if(!wl.length){g('snt_list').innerHTML='<i style="color:#789">No vessels on watch yet. Investigate a ship — if the verdict warrants it, it lands here, paused.</i>';return;}
+      g('snt_list').innerHTML=wl.map(w=>{const on=w.status==='active';
+        return '<div style="border-top:1px solid #1a2636;padding:7px 0">'
+         +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+         +'<span><b>'+(w.name||w.mmsi)+'</b> <span style="color:#789">'+w.mmsi+'</span></span>'
+         +'<button data-mmsi="'+w.mmsi+'" data-act="'+(on?'deactivate':'activate')+'" '
+         +'style="background:'+(on?'#c43':'#0b6')+';border:0;color:#021;font-weight:700;border-radius:6px;padding:3px 9px;cursor:pointer;white-space:nowrap">'
+         +(on?'Deactivate':'Activate')+'</button></div>'
+         +'<div style="color:#9ab;margin-top:3px">'+badge(w.level)+' · conf '+(w.confidence==null?'—':w.confidence)
+         +' · <span style="color:'+(on?'#6d6':'#b96')+'">'+w.status+'</span> · reviews '+(w.reviews||1)+'</div>'
+         +(w.last_note?'<div style="color:#789;margin-top:3px">↳ '+w.last_note+'</div>':'')+'</div>';
+      }).join('');
+      [...g('snt_list').querySelectorAll('button')].forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='…';
+        await fetch(BACKEND+'/watchlist/'+b.dataset.mmsi+'/'+b.dataset.act,{method:'POST'});load();});
+    }catch(e){g('snt_list').innerHTML='<i style="color:#a55">backend offline</i>';}
+  }
+  async function runNow(){g('snt_status').textContent='● running a monitoring cycle…';
+    try{await fetch(BACKEND+'/sentinel/run',{method:'POST'});const t0=Date.now();
+      const poll=setInterval(async()=>{let j={};try{j=await(await fetch(BACKEND+'/sentinel/status',{cache:'no-store'})).json();}catch(e){}
+        load();
+        if(j&&!j.running){clearInterval(poll);const s=(j.last&&(j.last.summary||j.last.error))||'done';g('snt_status').textContent='✓ '+s;}
+        else if(Date.now()-t0>300000){clearInterval(poll);g('snt_status').textContent='timeout';}},3000);
+    }catch(e){g('snt_status').textContent='backend offline';}
+  }
+  g('snt_run').onclick=runNow;load();setInterval(load,6000);
+})();
 </script></body></html>

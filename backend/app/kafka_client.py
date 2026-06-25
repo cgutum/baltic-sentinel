@@ -22,6 +22,7 @@ TOPIC_VESSEL_SUSPICION = "vessel.suspicion"
 TOPIC_AGENT_FINDINGS = "agent.findings"
 TOPIC_THREAT_ASSESSMENT = "threat.assessment"
 TOPIC_VOICE_BRIEFING = "voice.briefing"
+TOPIC_VESSEL_WATCH = "vessel.watch"  # investigation -> Sentinel monitoring hand-off
 
 ALL_TOPICS = [
     TOPIC_AIS_RAW,
@@ -29,6 +30,7 @@ ALL_TOPICS = [
     TOPIC_AGENT_FINDINGS,
     TOPIC_THREAT_ASSESSMENT,
     TOPIC_VOICE_BRIEFING,
+    TOPIC_VESSEL_WATCH,
 ]
 
 

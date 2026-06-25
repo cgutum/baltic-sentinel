@@ -208,6 +208,66 @@ def agent_result(mmsi: str):
     return {"ok": True, "status": "done", **job["result"]}
 
 
+# --- Sentinel (autonomous monitor) + watchlist control --------------------------
+_sentinel_state: dict = {"running": False, "last": None}
+_sentinel_lock = threading.Lock()
+
+
+def _run_sentinel_cycle() -> None:
+    from app.agent_workflow import sentinel
+    try:
+        out = sentinel.run_cycle()
+        with _sentinel_lock:
+            _sentinel_state.update(running=False,
+                                   last=out or {"summary": "watchlist had no active vessels"})
+    except Exception as e:  # noqa: BLE001
+        with _sentinel_lock:
+            _sentinel_state.update(running=False, last={"error": str(e)})
+        print(f"[sentinel-api] cycle failed: {e}")
+
+
+@router.get("/watchlist")
+def watchlist():
+    """All watch records (any status) for the operator UI."""
+    from app.agent_workflow import tools
+    return {"ok": True, "watchlist": tools.get_watchlist(status=None, limit=100)}
+
+
+@router.post("/watchlist/{mmsi}/activate")
+def watch_activate(mmsi: str):
+    """Operator grants the Sentinel authority to monitor this vessel."""
+    from app.agent_workflow import tools
+    print(f"[sentinel-api] operator ACTIVATED Sentinel on {mmsi}", flush=True)
+    return tools.set_watch_status(mmsi, "active")
+
+
+@router.post("/watchlist/{mmsi}/deactivate")
+def watch_deactivate(mmsi: str):
+    """Operator revokes the Sentinel's authority over this vessel."""
+    from app.agent_workflow import tools
+    print(f"[sentinel-api] operator DEACTIVATED Sentinel on {mmsi}", flush=True)
+    return tools.set_watch_status(mmsi, "paused")
+
+
+@router.post("/sentinel/run")
+def sentinel_run():
+    """Trigger one Sentinel monitoring cycle now (over the ACTIVE watchlist)."""
+    with _sentinel_lock:
+        if _sentinel_state["running"]:
+            return {"ok": True, "status": "running"}
+        _sentinel_state["running"] = True
+    print("[sentinel-api] monitoring cycle triggered by operator", flush=True)
+    threading.Thread(target=_run_sentinel_cycle, daemon=True).start()
+    return {"ok": True, "status": "running"}
+
+
+@router.get("/sentinel/status")
+def sentinel_status():
+    """Is a Sentinel cycle running, and what did the last one do?"""
+    with _sentinel_lock:
+        return {"ok": True, "running": _sentinel_state["running"], "last": _sentinel_state["last"]}
+
+
 @router.get("/assessment/latest")
 def assessment_latest():
     """Return the most recent investigation result (findings + assessment)."""

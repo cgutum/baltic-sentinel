@@ -18,9 +18,14 @@ from ..config import settings
 DEFAULT_MODEL = "claude-sonnet-4-6"
 
 # COST/LATENCY KNOB: max web searches per agent run. ~$0.01 each + result tokens.
-# Kept low because web search is the slowest step in the loop (balanced-latency mode).
-WEB_SEARCH_MAX_USES = 2
-WEB_SEARCH_TOOL = {"type": "web_search_20260209", "name": "web_search",
+# Kept at 1: web search is the slowest step, and a single non-streamed call doing
+# multiple searches was overrunning the request timeout.
+WEB_SEARCH_MAX_USES = 1
+# Basic web-search variant (no server-side code-execution container). The newer
+# web_search_20260209 ("dynamic filtering") runs in a code-exec container that our
+# manual tool-loop can't thread across turns -> 400 "container_id is required" and
+# heavy/slow first calls. The basic variant avoids both.
+WEB_SEARCH_TOOL = {"type": "web_search_20250305", "name": "web_search",
                    "max_uses": WEB_SEARCH_MAX_USES}
 
 

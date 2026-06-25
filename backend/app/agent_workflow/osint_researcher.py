@@ -50,4 +50,4 @@ def run(suspicion: dict, questions: list[str]) -> dict | None:
     # default (but no retry, so a true stall fails once rather than re-running searches).
     return agent_base.run_tool_loop(agent_name=AGENT, system=_SYSTEM, user=user,
                                     submit_tool=_SUBMIT, web_search=True, max_steps=3,
-                                    client_timeout=110.0, max_retries=0)
+                                    client_timeout=150.0, max_retries=0)

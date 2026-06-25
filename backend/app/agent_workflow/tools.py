@@ -28,6 +28,7 @@ from pathlib import Path
 from .. import database
 from ..kafka_client import (
     publish, TOPIC_AGENT_FINDINGS, TOPIC_THREAT_ASSESSMENT, TOPIC_VOICE_BRIEFING,
+    TOPIC_VESSEL_WATCH,
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -306,6 +307,32 @@ def save_assessment(assessment: dict, voice_path: str | None = None) -> None:
         print(f"[tools] save_assessment persist failed ({e})")
 
 
+def render_briefing(vessel: dict, assessment: dict, findings: list[dict]) -> dict:
+    """Deterministically format the operator deliverables from the finished verdict —
+    report markdown, an email draft, and the voice script. No extra LLM call (this
+    replaced the old Action Briefing agent): faster and fully reliable, since it only
+    restates what the Watch Officer already established."""
+    mmsi = vessel.get("mmsi")
+    name = vessel.get("name") or mmsi
+    level = assessment.get("level", "—")
+    conf = assessment.get("confidence", 0)
+    lines = [f"# Baltic Sentinel — {name} ({mmsi})",
+             f"**Verdict:** {level}  ·  confidence {conf}", "",
+             f"_{assessment.get('summary', '')}_", "", "## Findings"]
+    for f in sorted(findings, key=lambda x: x.get("severity", 0) or 0, reverse=True):
+        lines.append(f"- **[{f.get('agent')}] sev {f.get('severity')}** — {f.get('finding')}")
+    if assessment.get("reasoning"):
+        lines += ["", "## Why this verdict"] + [f"- {r}" for r in assessment["reasoning"]]
+    lines += ["", "## Recommended action", assessment.get("recommended_action", ""),
+              "", "_Human decision required — no automatic enforcement._"]
+    subject = f"[{level}] {name} ({mmsi}) — Baltic Sentinel alert"
+    body = (f"{assessment.get('summary', '')}\n\n"
+            f"Recommended action: {assessment.get('recommended_action', '')}\n\n"
+            f"(Confidence {conf}. Automated dossier — human verification required.)")
+    return {"report_markdown": "\n".join(lines), "email_subject": subject,
+            "email_body": body, "voice_script": assessment.get("voice_script", "")}
+
+
 def create_voice_briefing(voice_script: str, suspicion_id: str) -> dict:
     """Package the voice briefing payload. Real ElevenLabs audio is not wired yet
     (H13) — this publishes the script + intended path; it does NOT fake audio."""
@@ -314,6 +341,137 @@ def create_voice_briefing(voice_script: str, suspicion_id: str) -> dict:
     publish(TOPIC_VOICE_BRIEFING,
             {"suspicion_id": suspicion_id, "voice_path": path, "voice_script": voice_script})
     return {"voice_path": path, "audio_generated": False}
+
+
+# --------------------------------------------------------------------------- #
+# Watchlist  (the Sentinel agent's persistent memory: per-vessel monitoring state)
+#   The investigation writes a row here; the Sentinel reads it, re-checks, updates.
+#   Additive table, created idempotently — announce in contracts.md.
+# --------------------------------------------------------------------------- #
+_watchlist_ready = False
+
+
+def _ensure_watchlist_table() -> None:
+    """Create the watchlist table once per process (idempotent)."""
+    global _watchlist_ready
+    if _watchlist_ready or not database.is_configured():
+        return
+    try:
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS watchlist ("
+                " mmsi TEXT PRIMARY KEY, name TEXT, imo TEXT, suspicion_id TEXT,"
+                " level TEXT, confidence REAL, watch_signals JSONB, open_questions JSONB,"
+                " recheck_triggers JSONB, status TEXT DEFAULT 'active', reviews INTEGER DEFAULT 1,"
+                " last_note TEXT, last_reviewed TIMESTAMPTZ DEFAULT now(),"
+                " next_review_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT now())")
+            conn.commit()
+        _watchlist_ready = True
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] ensure watchlist table failed ({e})")
+
+
+def record_watch(watch: dict, review_hours: int = 6) -> None:
+    """Upsert a vessel's monitoring record (the investigation's hand-off to the
+    Sentinel) and stream it to Kafka. Keyed by mmsi; bumps the review counter."""
+    publish(TOPIC_VESSEL_WATCH, watch)
+    if not database.is_configured():
+        return
+    try:
+        _ensure_watchlist_table()
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO watchlist (mmsi,name,imo,suspicion_id,level,confidence,"
+                "watch_signals,open_questions,recheck_triggers,status,last_reviewed,next_review_at)"
+                " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now()+make_interval(hours=>%s))"
+                " ON CONFLICT (mmsi) DO UPDATE SET name=EXCLUDED.name, imo=EXCLUDED.imo,"
+                " suspicion_id=EXCLUDED.suspicion_id, level=EXCLUDED.level,"
+                " confidence=EXCLUDED.confidence, watch_signals=EXCLUDED.watch_signals,"
+                " open_questions=EXCLUDED.open_questions, recheck_triggers=EXCLUDED.recheck_triggers,"
+                " last_reviewed=now(), next_review_at=EXCLUDED.next_review_at,"
+                " reviews=watchlist.reviews+1",  # NB: status preserved (operator-controlled)
+                (watch["mmsi"], watch.get("name"), watch.get("imo"), watch.get("suspicion_id"),
+                 watch.get("level"), watch.get("confidence"),
+                 json.dumps(watch.get("watch_signals", [])),
+                 json.dumps(watch.get("open_questions", [])),
+                 json.dumps(watch.get("recheck_triggers", [])),
+                 watch.get("status", "active"), int(review_hours)))
+            conn.commit()
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] record_watch persist failed ({e})")
+
+
+def get_watchlist(due_only: bool = False, limit: int = 100,
+                  status: str | None = "active") -> list[dict]:
+    """Read the watchlist. status=None returns ALL rows (for the operator UI); the
+    Sentinel uses the default 'active' so it only monitors vessels the operator has
+    enabled. due_only -> only rows whose scheduled review time has passed."""
+    if not database.is_configured():
+        return []
+    try:
+        _ensure_watchlist_table()
+        from psycopg.rows import dict_row
+        clauses, params = [], []
+        if status:
+            clauses.append("status = %s"); params.append(status)
+        if due_only:
+            clauses.append("(next_review_at IS NULL OR next_review_at <= now())")
+        where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+        with database.get_connection() as conn:
+            conn.read_only = True
+            with conn.cursor(row_factory=dict_row) as cur:
+                cur.execute(f"SELECT * FROM watchlist {where} "
+                            f"ORDER BY confidence DESC NULLS LAST LIMIT {int(limit)}", params)
+                return cur.fetchall()
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] get_watchlist failed ({e})")
+        return []
+
+
+def set_watch_status(mmsi: str, status: str) -> dict:
+    """Operator control: activate ('active') or pause ('paused') the Sentinel on a
+    vessel (also 'cleared' / 'escalated'). This is how the operator grants or revokes
+    the Sentinel's authority to monitor a specific ship."""
+    if not database.is_configured():
+        return {"ok": False, "error": "database not configured"}
+    try:
+        _ensure_watchlist_table()
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("UPDATE watchlist SET status=%s WHERE mmsi=%s", (status, mmsi))
+            n = cur.rowcount
+            conn.commit()
+        print(f"[watchlist] {mmsi} -> status={status} ({n} row updated)", flush=True)
+        return {"ok": True, "mmsi": mmsi, "status": status, "updated": n}
+    except Exception as e:  # noqa: BLE001
+        print(f"[watchlist] set_watch_status failed ({e})")
+        return {"ok": False, "error": str(e)[:200]}
+
+
+def update_watch(mmsi: str, level: str | None = None, confidence: float | None = None,
+                 status: str | None = None, note: str | None = None,
+                 review_hours: int = 6) -> None:
+    """Update a watch record after the Sentinel re-checks a vessel."""
+    if not database.is_configured():
+        return
+    try:
+        _ensure_watchlist_table()
+        sets = ["last_reviewed = now()", "reviews = reviews + 1",
+                f"next_review_at = now() + make_interval(hours => {int(review_hours)})"]
+        vals: list = []
+        if level is not None:
+            sets.append("level = %s"); vals.append(level)
+        if confidence is not None:
+            sets.append("confidence = %s"); vals.append(confidence)
+        if status is not None:
+            sets.append("status = %s"); vals.append(status)
+        if note is not None:
+            sets.append("last_note = %s"); vals.append(note)
+        vals.append(mmsi)
+        with database.get_connection() as conn, conn.cursor() as cur:
+            cur.execute(f"UPDATE watchlist SET {', '.join(sets)} WHERE mmsi = %s", vals)
+            conn.commit()
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] update_watch failed ({e})")
 
 
 # --------------------------------------------------------------------------- #
