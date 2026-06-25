@@ -1,2 +1,4 @@
 # Shell scripts must stay LF so they run in the Linux deploy container.
 *.sh text eol=lf
+# Certs are byte-exact — never convert line endings.
+*.pem -text
