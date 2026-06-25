@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     # Aiven Postgres
     aiven_postgres_url: str = ""
 
+    # Aiven MCP (hosted). When the token is set, the Evidence Librarian queries
+    # Aiven through the official MCP server via the Anthropic API MCP connector.
+    aiven_mcp_token: str = ""
+    aiven_mcp_url: str = "https://mcp.aiven.live/mcp?read_only=true&allow_secrets=true"
+
     # When true, the backend uses cached demo assets instead of live calls.
     demo_mode: bool = True
 

@@ -169,9 +169,24 @@ function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329
 function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);$('d_fill').style.width=(p.score||0)+'%';const lv=$('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);resetVerdict();const b=$('launch');b.style.display=t==='safe'?'none':'block';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';}
 // --- REAL investigation (calls B's agents); falls back to a simulated swarm if backend down ---
 async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contains('done'))return;b.classList.add('done');b.textContent='● Investigation running…';const lv=$('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';
-  agentsEl.innerHTML='<div class="agent live" style="opacity:1;transform:none"><div class="ah"><span class="an">Investigator</span></div><div class="af"><span class="sp">● running Claude agents… (may take ~10-30s)</span></div></div>';
-  try{const r=await fetch(`${BACKEND}/agent/investigate/${mmsi}`,{method:'POST'});if(!r.ok)throw new Error('http '+r.status);const j=await r.json();if(!j.findings)throw new Error('no findings');renderFindings(j.findings,j.assessment||{});}
-  catch(e){console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
+  agentsEl.innerHTML='<div class="agent live" style="opacity:1;transform:none"><div class="ah"><span class="an">Investigation team</span></div><div class="af"><span class="sp" id="agtick">● running Claude agents on live Aiven data… (deep investigation, ~2-5 min)</span></div></div>';
+  const t0=Date.now();const tick=setInterval(()=>{const el=document.getElementById('agtick');if(el)el.textContent=`● investigating on live Aiven data… ${Math.floor((Date.now()-t0)/1000)}s elapsed (deep investigation, ~2-5 min)`;},1000);
+  try{
+    const r=await fetch(`${BACKEND}/agent/investigate/${mmsi}`,{method:'POST'});if(!r.ok)throw new Error('http '+r.status);
+    let j=null;const deadline=Date.now()+480000;  // poll up to 8 min
+    while(Date.now()<deadline){
+      await new Promise(res=>setTimeout(res,4000));
+      const pr=await fetch(`${BACKEND}/agent/result/${mmsi}`,{cache:'no-store'});
+      if(pr.status===500){const ej=await pr.json().catch(()=>({}));throw new Error(ej.error||'agent error');}
+      if(!pr.ok)continue;  // job not registered yet — keep polling
+      const pj=await pr.json();
+      if(pj.status==='done'){j=pj;break;}
+    }
+    clearInterval(tick);
+    if(!j||!j.findings)throw new Error('timeout/no findings');
+    renderFindings(j.findings,j.assessment||{});
+  }
+  catch(e){clearInterval(tick);console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
 function renderFindings(findings,a){agentsEl.innerHTML='';findings.forEach((f,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${f.agent||'Agent'}</span><span class="ac" style="visibility:hidden">sev ${(f.severity!=null?f.severity:0).toFixed(2)}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);
     setTimeout(()=>{el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=f.finding||'';},500);},i*700);});
   setTimeout(()=>finishVerdict(a),findings.length*700+700);}
