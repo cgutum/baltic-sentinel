@@ -1,58 +1,41 @@
-"""Environment & Proximity specialist — Person B.
+"""Infrastructure Environment Analyst — Person B.
 
-Answers "can we trust the picture, and what else is around this vessel?"
-- get_nearby_vessels -> the live maritime scene (a second loitering vessel, a
-  cluster, an escort near the cable) — the "wider picture" no single-vessel view has
-- get_cable_context  -> what the threatened cable actually is
+Interprets the environment evidence (real GPS-jam check, nearest-cable distance,
+nearby vessels) to judge AIS/GPS trust, cable proximity, and the surrounding
+scene. Honest when data is unavailable: it must say 'GPS context unavailable' /
+'cable context unavailable' rather than assert.
 
-This is the agent that looks beyond the one suspect to the situation around it.
+run(case) -> list[finding]
 """
 
-from . import agent_base, tools
+import json
 
-AGENT = "Environment & Proximity"
+from . import agent_base
+
+AGENT = "Infrastructure Environment"
 
 _SYSTEM = (
-    "You are the Environment & Proximity analyst for Baltic Sentinel. Assess two "
-    "things: (1) GPS/AIS TRUST in this area — if the vessel is in a GPS-jamming zone "
-    "or has AIS gaps, reported positions and speeds must be treated with low "
-    "confidence; (2) the maritime SCENE around the vessel via get_nearby_vessels — is "
-    "there a second slow/loitering vessel, an unusual cluster, or an escort near the "
-    "cable that changes the picture? Use get_cable_context for what the cable is and "
-    "why it matters. If no vessels are nearby or no position is available, say so "
-    "plainly. Finish by calling submit_findings with 1-2 findings."
+    "You are the Infrastructure Environment Analyst. Using ONLY the provided evidence, "
+    "judge: (1) GPS/AIS TRUST — if the GPS-jam check says available=false, state 'GPS "
+    "context unavailable'; if available, report whether it's in a jammed zone and what "
+    "that does to position confidence. (2) CABLE PROXIMITY — use the real nearest-cable "
+    "distance; if it is not inside a corridor and the distance is large, say it is NOT "
+    "near a cable rather than implying it is; if cable data is unavailable say so. "
+    "(3) SCENE — note any meaningful clustering of nearby vessels (a second loiterer, "
+    "an anchorage, adjacent-MMSI group). Cable corridors are approximate. Submit 1-2 findings."
 )
 
-_TOOLS = [
-    {"name": "get_nearby_vessels",
-     "description": "Other live vessels within radius_nm of a point: mmsi,name,flag,ship_type,speed,nav_status,score,is_candidate,distance_nm.",
-     "input_schema": {"type": "object", "properties": {
-         "lat": {"type": "number"}, "lon": {"type": "number"},
-         "radius_nm": {"type": "number", "description": "default 10"}}}},
-    {"name": "get_cable_context",
-     "description": "Context about the cable corridor (kind, operator, role).",
-     "input_schema": {"type": "object", "properties": {"cable": {"type": "string"}}}},
-]
 
-
-def run(suspicion: dict) -> list[dict]:
-    lp = suspicion.get("last_position") or {}
-    lat, lon = lp.get("lat"), lp.get("lon")
+def run(case: dict) -> list[dict]:
+    raw = case.get("raw", {})
+    lib = case.get("librarian") or {}
     user = (
-        f"Vessel mmsi={suspicion.get('mmsi')} name={suspicion.get('name')!r} at "
-        f"lat={lat} lon={lon}, cable={suspicion.get('cable')}.\n"
-        f"Scoring reasons (may flag GPS jamming / AIS gaps): {suspicion.get('reasons')}\n\n"
-        "Call get_nearby_vessels around its position and get_cable_context, then "
-        "submit_findings about GPS/AIS trust and the surrounding scene."
+        f"GPS environment: {json.dumps(raw.get('gps'), default=str)}\n"
+        f"Nearest cable: {json.dumps(raw.get('cable'), default=str)}\n"
+        f"Nearby vessels ({len(raw.get('nearby', []))}): "
+        f"{json.dumps(raw.get('nearby'), default=str)[:2500]}\n"
+        f"Librarian additional findings: {json.dumps(lib.get('additional_findings', []), default=str)[:1500]}\n\n"
+        "Analyze GPS/AIS trust, cable proximity, and the surrounding scene, then submit_findings."
     )
-    dispatch = {
-        "get_nearby_vessels": lambda inp: tools.get_nearby_vessels(
-            inp.get("lat", lat), inp.get("lon", lon),
-            radius_nm=float(inp.get("radius_nm", 10)),
-            exclude_mmsi=suspicion.get("mmsi")),
-        "get_cable_context": lambda inp: tools.get_cable_context(
-            inp.get("cable") or suspicion.get("cable")),
-    }
-    return agent_base.run_specialist(
-        agent_name=AGENT, system=_SYSTEM, user=user, suspicion=suspicion,
-        tool_defs=_TOOLS, dispatch=dispatch, max_steps=4)
+    return agent_base.run_specialist(agent_name=AGENT, system=_SYSTEM, user=user,
+                                     suspicion=case["suspicion"], force_first=True)

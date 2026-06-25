@@ -1,45 +1,40 @@
-"""Identity & Records specialist — Person B.
+"""Identity & Records Analyst — Person B.
 
-Answers "who is this vessel really, and does its record raise concern?"
-- deterministic identity checks (IMO check-digit, etc.)  -> context
-- real OpenSanctions maritime record                     -> context
-- live web search (OSINT: ownership, flag history, prior detentions, news) -> tool
+Interprets the ALREADY-GATHERED evidence (deterministic IMO check, real
+OpenSanctions record, OSINT findings) to judge identity authenticity and record
+risk. It does not fetch — gathering is the Librarian's/OSINT's job. It must mark
+anything unverified and reduce confidence when public corroboration is missing.
 
-This adds NEW information beyond the suspicion packet, instead of restating it.
+run(case) -> list[finding]
 """
 
-from . import agent_base, tools
+import json
+
+from . import agent_base
 
 AGENT = "Identity & Records"
 
 _SYSTEM = (
-    "You are the Identity & Records analyst for Baltic Sentinel, a maritime "
-    "infrastructure threat monitor. Your job: establish who this vessel really is "
-    "and whether its record raises concern. You are given deterministic identity "
-    "checks and the OpenSanctions maritime record. Use web_search to corroborate "
-    "and expand — vessel ownership, flag/registry history, prior detentions or "
-    "incidents, shadow-/dark-fleet reporting, and recent news tied to the name or "
-    "IMO. Base every finding on evidence and clearly mark anything unverified; do "
-    "not assert sanctions or affiliations the data doesn't support. Finish by "
-    "calling submit_findings with 1-2 findings."
+    "You are the Identity & Records Analyst. Judge (a) whether the vessel's identity is "
+    "authentic/consistent and (b) whether its record raises concern — using ONLY the "
+    "provided evidence: the deterministic IMO check, the OpenSanctions record, and the "
+    "OSINT findings. Rules: if OpenSanctions shows listed=false, do not call it sanctioned. "
+    "Distinguish a port-state DETENTION from an active SANCTIONS designation. If OSINT "
+    "found 'no confirmed public source', state that the listing/affiliation is UNVERIFIED "
+    "beyond OpenSanctions and lower the severity accordingly. Never assert facts the "
+    "evidence does not support. Submit 1-2 findings."
 )
 
 
-def run(suspicion: dict) -> list[dict]:
-    ident = tools.validate_identity(
-        mmsi=suspicion.get("mmsi"), imo=suspicion.get("imo"),
-        name=suspicion.get("name"), flag=suspicion.get("flag"))
-    record = tools.get_sanctions_record(
-        imo=suspicion.get("imo"), name=suspicion.get("name"))
-
+def run(case: dict) -> list[dict]:
+    raw = case.get("raw", {})
     user = (
-        f"Vessel: name={suspicion.get('name')!r} mmsi={suspicion.get('mmsi')} "
-        f"imo={suspicion.get('imo')} flag={suspicion.get('flag')}\n"
-        f"Deterministic identity checks: {ident['checks']}\n"
-        f"OpenSanctions maritime record: {record}\n\n"
-        "Investigate the vessel's identity authenticity and record risk. Use "
-        "web_search for open-source corroboration, then call submit_findings."
+        f"Identity check: {json.dumps(raw.get('identity_check'), default=str)}\n"
+        f"OpenSanctions record: {json.dumps(raw.get('sanctions'), default=str)}\n"
+        f"Vessel: {json.dumps(raw.get('vessel'), default=str)}\n"
+        f"OSINT findings: {json.dumps(case.get('osint', {}).get('findings', []), default=str)[:2000]}\n"
+        f"OSINT unresolved: {json.dumps(case.get('osint', {}).get('unresolved', []), default=str)[:1000]}\n\n"
+        "Analyze identity authenticity and record risk, then submit_findings."
     )
-    return agent_base.run_specialist(
-        agent_name=AGENT, system=_SYSTEM, user=user, suspicion=suspicion,
-        web_search=True, max_steps=6)
+    return agent_base.run_specialist(agent_name=AGENT, system=_SYSTEM, user=user,
+                                     suspicion=case["suspicion"], force_first=True)

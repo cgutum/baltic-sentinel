@@ -9,6 +9,7 @@ Person B (agents):
   GET  /assessment/latest, /voice/latest, /events   (stubs until wired)
 """
 import datetime
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -127,9 +128,30 @@ def investigate(mmsi: str):
 
 # In-memory cache of the most recent investigation (for /assessment/latest + the UI).
 _last_result: dict = {}
-# Per-vessel debounce so a double-click doesn't fire two Claude investigations.
-_AGENT_DEBOUNCE_SEC = 8
-_agent_debounce: dict[str, float] = {}
+# Async investigation jobs: mmsi -> {"status": "running"|"done"|"error", result/error, ts}.
+# Investigations take minutes (Claude agents + Aiven MCP + web search) — longer than a
+# browser holds a fetch open — so POST starts a thread and the UI polls /agent/result.
+_jobs: dict[str, dict] = {}
+_jobs_lock = threading.Lock()
+
+
+def _run_investigation(mmsi: str, suspicion: dict, vessel: dict) -> None:
+    """Background worker: run the agent team, stash the result for polling."""
+    from app.agent_workflow import orchestrator
+    try:
+        result = orchestrator.run_once(suspicion)
+        payload = {"mmsi": mmsi, "vessel": vessel,
+                   "findings": result["findings"], "assessment": result["assessment"],
+                   "osint": result.get("osint"), "briefing": result.get("briefing"),
+                   "evidence": result.get("evidence")}
+        with _jobs_lock:
+            _jobs[mmsi] = {"status": "done", "result": payload, "ts": time.time()}
+        _last_result.clear()
+        _last_result.update(payload)
+    except Exception as e:  # noqa: BLE001 — surface failure via the poll endpoint
+        with _jobs_lock:
+            _jobs[mmsi] = {"status": "error", "error": str(e), "ts": time.time()}
+        print(f"[agent] investigation failed for {mmsi}: {e}")
 
 
 def _suspicion_from_vessel(mmsi: str, v: dict) -> dict:
@@ -157,38 +179,48 @@ def _suspicion_from_vessel(mmsi: str, v: dict) -> dict:
 
 @router.post("/agent/investigate/{mmsi}")
 def agent_investigate(mmsi: str):
-    """Run the Claude agent on a chosen vessel; return findings + assessment.
+    """Kick off the investigation team on a vessel and return immediately.
 
-    Synchronous (the UI shows a spinner). Debounced per vessel. Uses live vessel
-    data when Postgres is configured, else the canned Eagle S demo case.
+    Investigations take minutes (Claude agents + Aiven MCP + web search) — far longer
+    than a browser holds a fetch open — so we run them in a background thread and
+    return {status:'running'}. The UI polls /agent/result/{mmsi}. Uses ONLY live
+    vessel data from Aiven — Eagle S is treated like any other vessel.
     """
     from app import database
-    from app.agent_workflow import orchestrator, fallback_outputs
-
-    now = time.monotonic()
-    last = _agent_debounce.get(mmsi)
-    if last and now - last < _AGENT_DEBOUNCE_SEC and _last_result.get("mmsi") == mmsi:
-        return {"ok": True, "deduped": True, **_last_result}
-    _agent_debounce[mmsi] = now
 
     v = database.get_vessel(mmsi) if database.is_configured() else None
-    if v:
-        suspicion = _suspicion_from_vessel(mmsi, v)
-        vessel = {"mmsi": mmsi, "name": v.get("name"), "flag": v.get("flag"),
-                  "score": v.get("suspicion_score")}
-    elif str(mmsi) == fallback_outputs.SAMPLE_SUSPICION["mmsi"]:
-        suspicion = fallback_outputs.SAMPLE_SUSPICION
-        vessel = {"mmsi": mmsi, "name": "Eagle S", "flag": "Cook Islands", "score": 85}
-    else:
+    if not v:
         return JSONResponse(status_code=404, content={
-            "ok": False, "error": "Unknown vessel (no live DB connected, and not the demo vessel)."})
+            "ok": False, "error": "Unknown vessel — no live data for this MMSI. Make sure the "
+            "ingest + state_builder workers are running (replay Eagle S like any other vessel)."})
 
-    result = orchestrator.run_once(suspicion)
-    payload = {"mmsi": mmsi, "vessel": vessel,
-               "findings": result["findings"], "assessment": result["assessment"]}
-    _last_result.clear()
-    _last_result.update(payload)
-    return {"ok": True, **payload}
+    with _jobs_lock:
+        job = _jobs.get(mmsi)
+        if job and job.get("status") == "running":
+            return {"ok": True, "status": "running", "mmsi": mmsi}  # already investigating
+        _jobs[mmsi] = {"status": "running", "ts": time.time()}
+
+    suspicion = _suspicion_from_vessel(mmsi, v)
+    vessel = {"mmsi": mmsi, "name": v.get("name"), "flag": v.get("flag"),
+              "score": v.get("suspicion_score")}
+    threading.Thread(target=_run_investigation, args=(mmsi, suspicion, vessel),
+                     daemon=True).start()
+    return {"ok": True, "status": "running", "mmsi": mmsi}
+
+
+@router.get("/agent/result/{mmsi}")
+def agent_result(mmsi: str):
+    """Poll an investigation's status/result (started by POST /agent/investigate)."""
+    with _jobs_lock:
+        job = _jobs.get(mmsi)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "status": "none"})
+    if job["status"] == "running":
+        return {"ok": True, "status": "running", "mmsi": mmsi}
+    if job["status"] == "error":
+        return JSONResponse(status_code=500, content={
+            "ok": False, "status": "error", "error": job.get("error")})
+    return {"ok": True, "status": "done", **job["result"]}
 
 
 @router.get("/assessment/latest")

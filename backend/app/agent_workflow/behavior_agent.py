@@ -1,50 +1,38 @@
-"""Behavior & History specialist — Person B.
+"""Maritime Behavior Analyst — Person B.
 
-Answers "how is this vessel actually moving, and has it done this before?"
-- get_recent_track   -> the REAL recorded track (may be empty)
-- get_vessel_history -> prior suspicion events for this MMSI
+Interprets the vessel's real track + history (already gathered) to judge movement
+behavior. Honest about thin data: an empty or single-point track means movement
+cannot be characterized — it must say 'insufficient track data', never invent.
 
-Honest about movement: if the track is empty it must say so, not invent loitering.
+run(case) -> list[finding]
 """
 
-from . import agent_base, tools
+import json
 
-AGENT = "Behavior & History"
+from . import agent_base
+
+AGENT = "Maritime Behavior"
 
 _SYSTEM = (
-    "You are the Behavior & History analyst for Baltic Sentinel. Use get_recent_track "
-    "to examine how the vessel has actually moved, and get_vessel_history for prior "
-    "incidents involving this MMSI. Rules: if get_recent_track returns an EMPTY list, "
-    "state that movement history is unavailable — do NOT invent or describe movement. "
-    "Carefully distinguish a STOPPED/anchored vessel (~0 kn) from SLOW LOITERING "
-    "(moving below 3 kn): they mean different things over a cable. Note repeat behavior "
-    "if prior suspicions exist. Finish by calling submit_findings with 1-2 findings."
+    "You are the Maritime Behavior Analyst. Judge how the vessel is moving and whether "
+    "it has prior history, using ONLY the provided track and history. Rules: if the track "
+    "is empty or a single point, state 'insufficient track data' and that movement cannot "
+    "be characterized — do NOT infer loitering or anchor-dragging from nothing. Carefully "
+    "distinguish STOPPED/anchored (~0 kn) from SLOW LOITERING (sustained motion below 3 kn). "
+    "Note any prior suspicion events or assessments as repeat history. Submit 1-2 findings."
 )
 
-_TOOLS = [
-    {"name": "get_recent_track",
-     "description": "Recent positions for the vessel (lat,lon,speed,course,ts), oldest first. MAY BE EMPTY.",
-     "input_schema": {"type": "object", "properties": {"mmsi": {"type": "string"}}}},
-    {"name": "get_vessel_history",
-     "description": "Prior suspicion events for this MMSI + how many track points are on record.",
-     "input_schema": {"type": "object", "properties": {"mmsi": {"type": "string"}}}},
-]
 
-
-def run(suspicion: dict) -> list[dict]:
-    mmsi = suspicion.get("mmsi")
-    last = suspicion.get("last_position") or {}
+def run(case: dict) -> list[dict]:
+    raw = case.get("raw", {})
+    lp = case["suspicion"].get("last_position") or {}
     user = (
-        f"Vessel mmsi={mmsi} name={suspicion.get('name')!r} near cable={suspicion.get('cable')}.\n"
-        f"Last reported position/speed: {last}\n"
-        f"Scoring reasons so far: {suspicion.get('reasons')}\n\n"
-        "Call get_recent_track and get_vessel_history, then submit_findings about its "
-        "movement behavior and history."
+        f"Recent track ({len(raw.get('track', []))} points): "
+        f"{json.dumps(raw.get('track'), default=str)[:2500]}\n"
+        f"History: {json.dumps(raw.get('history'), default=str)[:1500]}\n"
+        f"Last reported position/speed: {json.dumps(lp, default=str)}\n"
+        f"Scoring reasons: {json.dumps(raw.get('scoring_reasons', []), default=str)}\n\n"
+        "Analyze movement behavior and history, then submit_findings."
     )
-    dispatch = {
-        "get_recent_track": lambda inp: tools.get_recent_track(inp.get("mmsi") or mmsi),
-        "get_vessel_history": lambda inp: tools.get_vessel_history(inp.get("mmsi") or mmsi),
-    }
-    return agent_base.run_specialist(
-        agent_name=AGENT, system=_SYSTEM, user=user, suspicion=suspicion,
-        tool_defs=_TOOLS, dispatch=dispatch, max_steps=4)
+    return agent_base.run_specialist(agent_name=AGENT, system=_SYSTEM, user=user,
+                                     suspicion=case["suspicion"], force_first=True)
