@@ -51,8 +51,20 @@ _SYSTEM = (
     "Guardrails: be conservative — most cycles should be mostly update_watch. Do NOT "
     "reinvestigate or escalate without a real, evidenced change. You have a limited budget of "
     "reinvestigations and escalations per cycle; spend them only where warranted. Base every "
-    "decision on tool results, never assume, and never take destructive action. When you have "
-    "handled the vessels, call submit_cycle."
+    "decision on tool results, never assume, and never take destructive action.\n\n"
+    "YOUR LONG-TERM MEMORY lives in Aiven and you manage it YOURSELF through the MCP Postgres "
+    "tools (aiven_pg_write / aiven_pg_read), NOT through update_watch. It is the table "
+    "sentinel_memory(id serial, ts timestamptz default now(), mmsi text, cycle_note text). "
+    "Each cycle: (a) ensure it exists — aiven_pg_write a 'CREATE TABLE IF NOT EXISTS "
+    "sentinel_memory (id serial primary key, ts timestamptz default now(), mmsi text, "
+    "cycle_note text)'; (b) optionally recall a vessel's history — aiven_pg_read 'SELECT "
+    "cycle_note, ts FROM sentinel_memory WHERE mmsi=... ORDER BY ts DESC LIMIT 3'; (c) after "
+    "you decide on a vessel, persist a one-line observation — aiven_pg_write 'INSERT INTO "
+    "sentinel_memory (mmsi, cycle_note) VALUES (...)'. aiven_pg_write blocks DROP/TRUNCATE — "
+    "you never need them. The project / service_name / database for these MCP tools are given "
+    "in the cycle message. (update_watch remains the operator-facing status; sentinel_memory "
+    "is your own running log.)\n\n"
+    "When you have handled the vessels, call submit_cycle."
 )
 
 _TOOLS = [
@@ -198,9 +210,12 @@ def run_cycle() -> dict | None:
               "watch_signals": w.get("watch_signals"), "open_questions": w.get("open_questions")}
              for w in watchlist]
     user = (
+        f"Aiven Postgres for the MCP tools -> project={settings.aiven_project!r}, "
+        f"service_name={settings.aiven_pg_service!r}, database={settings.aiven_pg_database!r}.\n\n"
         f"Current watchlist ({len(brief)} vessels):\n{json.dumps(brief, default=str)[:6000]}\n\n"
-        "Review them now: check what changed, check pipeline health, decide and act on each, "
-        "then call submit_cycle."
+        "Review them now: ensure your sentinel_memory table exists (via MCP), recall prior "
+        "memory if useful, check what changed, check pipeline health, decide and act on each "
+        "vessel, persist a short observation to sentinel_memory (via MCP), then call submit_cycle."
     )
     return agent_base.run_tool_loop(
         agent_name=AGENT, system=_SYSTEM, user=user, submit_tool=_SUBMIT,

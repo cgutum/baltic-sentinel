@@ -10,8 +10,18 @@ run_specialist: thin wrapper for analysts that produce AgentFinding-shaped findi
 """
 
 import json
+import time
+from collections import deque
 
 from ..config import settings
+
+# Recent Aiven MCP tool calls the agents have made (newest last) — surfaced in the
+# UI so the MCP usage is visible. Capped ring buffer.
+MCP_ACTIVITY: "deque[dict]" = deque(maxlen=60)
+
+
+def _record_mcp(agent_name: str, tool: str, ok: bool | None = None) -> None:
+    MCP_ACTIVITY.append({"agent": agent_name, "tool": tool, "ok": ok, "ts": time.time()})
 
 # Sub-agents run on the faster Sonnet by default (much lower latency); the Watch
 # Officer passes model="claude-opus-4-8" for the final verdict.
@@ -131,6 +141,7 @@ def run_tool_loop(*, agent_name: str, system: str, user: str, submit_tool: dict,
                     return dict(block.input or {})
             _log(f"[{agent_name}] no submission (single-shot)")
             return None
+        pending_mcp_tool = "?"
         for step in range(max_steps):
             resp = _create()
             messages.append({"role": "assistant", "content": resp.content})
@@ -139,9 +150,11 @@ def run_tool_loop(*, agent_name: str, system: str, user: str, submit_tool: dict,
             for block in resp.content:
                 btype = getattr(block, "type", None)
                 if btype == "mcp_tool_use":  # Aiven MCP tool, executed server-side
-                    _log(f"[{agent_name}] Aiven MCP call -> {getattr(block, 'name', '?')}")
+                    pending_mcp_tool = getattr(block, "name", "?")
+                    _log(f"[{agent_name}] Aiven MCP call -> {pending_mcp_tool}")
                 elif btype == "mcp_tool_result":
-                    bad = getattr(block, "is_error", False)
+                    bad = bool(getattr(block, "is_error", False))
+                    _record_mcp(agent_name, pending_mcp_tool, ok=not bad)
                     _log(f"[{agent_name}] Aiven MCP result: {'ERROR' if bad else 'ok'}")
                 elif btype == "server_tool_use":  # web search query, executed server-side
                     q = (getattr(block, "input", {}) or {}).get("query")

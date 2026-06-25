@@ -212,7 +212,9 @@ renderFeed();openDz();selEagle();
    +'<b style="font-size:13px">🛰 Sentinel — autonomous monitor</b>'
    +'<button id="snt_run" style="background:#0b6;border:0;color:#021;font-weight:700;border-radius:6px;'
    +'padding:4px 9px;cursor:pointer">Run now</button></div>'
-   +'<div id="snt_status" style="color:#8ab;margin-bottom:6px">idle</div><div id="snt_list">loading…</div>';
+   +'<div id="snt_status" style="color:#8ab;margin-bottom:6px">idle</div><div id="snt_list">loading…</div>'
+   +'<div style="margin-top:8px;border-top:1px solid #1a2636;padding-top:6px"><b style="color:#7cf">Aiven MCP calls</b>'
+   +'<div id="snt_mcp" style="color:#789;margin-top:3px">—</div></div>';
   document.body.appendChild(wrap);
   const g=id=>document.getElementById(id);
   const badge=l=>{const c=l==='HIGH'?'#e55':l==='MEDIUM'?'#fb3':'#5c6';return '<span style="color:'+c+';font-weight:700">'+(l||'—')+'</span>';};
@@ -244,6 +246,13 @@ renderFeed();openDz();selEagle();
         else if(Date.now()-t0>300000){clearInterval(poll);g('snt_status').textContent='timeout';}},3000);
     }catch(e){g('snt_status').textContent='backend offline';}
   }
-  g('snt_run').onclick=runNow;load();setInterval(load,6000);
+  async function loadMcp(){
+    try{const r=await fetch(BACKEND+'/mcp/activity',{cache:'no-store'});const j=await r.json();const a=(j&&j.activity)||[];
+      g('snt_mcp').innerHTML=a.length?a.slice(-8).reverse().map(x=>
+        '<div>'+(x.ok===false?'✗':'✓')+' <b style="color:#9df">'+(x.tool||'?')+'</b> <span style="color:#678">'+(x.agent||'')+'</span></div>'
+      ).join(''):'<i>no MCP calls yet</i>';
+    }catch(e){}
+  }
+  g('snt_run').onclick=runNow;load();loadMcp();setInterval(()=>{load();loadMcp();},6000);
 })();
 </script></body></html>

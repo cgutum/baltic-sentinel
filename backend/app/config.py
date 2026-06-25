@@ -31,10 +31,18 @@ class Settings(BaseSettings):
     # Aiven Postgres
     aiven_postgres_url: str = ""
 
-    # Aiven MCP (hosted). When the token is set, the Evidence Librarian queries
-    # Aiven through the official MCP server via the Anthropic API MCP connector.
+    # Aiven MCP (hosted). The agents reach the Aiven data layer through the official
+    # MCP server via the Anthropic API MCP connector. WRITABLE: read_only removed so
+    # agents can run SQL writes / provision infra (aiven_pg_write etc.); allow_secrets
+    # lets the MCP fetch the service credentials it needs to connect to Postgres.
     aiven_mcp_token: str = ""
-    aiven_mcp_url: str = "https://mcp.aiven.live/mcp?read_only=true&allow_secrets=true"
+    aiven_mcp_url: str = "https://mcp.aiven.live/mcp?allow_secrets=true"
+
+    # Aiven service coordinates the agents pass to the MCP Postgres tools
+    # (aiven_pg_read / aiven_pg_write). Confirmed via the MCP write smoke test.
+    aiven_project: str = "baltic-sentinel"
+    aiven_pg_service: str = "baltic-pg"
+    aiven_pg_database: str = "defaultdb"
 
     # When true, the backend uses cached demo assets instead of live calls.
     demo_mode: bool = True

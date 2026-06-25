@@ -47,7 +47,11 @@ _SYSTEM = (
     "logs). Fold that into your SUMMARY as data-provenance, and into GAPS if the data "
     "looks stale or the pipeline looks unhealthy. Don't call MCP just to call it — skip "
     "it if it adds nothing. Be efficient: a few targeted queries (plus at most one MCP "
-    "health check), then call submit_evidence."
+    "health check), then call submit_evidence.\n\n"
+    "IMPORTANT: after 2-3 queries STOP querying and call submit_evidence with your summary "
+    "+ findings + gaps. Never keep querying until you run out of turns — a thin-but-real "
+    "summary ('Aiven shows N tracks and no prior events for this vessel') is far better "
+    "than an empty submission."
 )
 
 _TOOLS = [
@@ -106,5 +110,5 @@ def run(suspicion: dict, raw: dict, osint: dict | None = None) -> dict | None:
     # Librarian runs in parallel with OSINT (the long pole), so this is hidden.
     return agent_base.run_tool_loop(agent_name=AGENT, system=_SYSTEM, user=user,
                                     submit_tool=_SUBMIT, tool_defs=_TOOLS,
-                                    dispatch=dispatch, max_steps=3, mcp_servers=mcp,
+                                    dispatch=dispatch, max_steps=5, mcp_servers=mcp,
                                     client_timeout=60.0, max_retries=0)

@@ -268,6 +268,13 @@ def sentinel_status():
         return {"ok": True, "running": _sentinel_state["running"], "last": _sentinel_state["last"]}
 
 
+@router.get("/mcp/activity")
+def mcp_activity():
+    """Recent Aiven MCP tool calls the agents have made (for the UI activity panel)."""
+    from app.agent_workflow.agent_base import MCP_ACTIVITY
+    return {"ok": True, "activity": list(MCP_ACTIVITY)[-40:]}
+
+
 @router.get("/assessment/latest")
 def assessment_latest():
     """Return the most recent investigation result (findings + assessment)."""
