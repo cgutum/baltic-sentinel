@@ -32,7 +32,6 @@ _SCHEMA = [
         lat double precision, lon double precision,
         speed double precision, course double precision,
         ts timestamptz, source text)""",
-    "CREATE INDEX IF NOT EXISTS idx_tracks_mmsi_ts ON tracks (mmsi, ts DESC)",
     """CREATE TABLE IF NOT EXISTS suspicion_events (
         suspicion_id text PRIMARY KEY, mmsi text, imo text, name text,
         rule text, cable text, severity double precision,
@@ -57,12 +56,40 @@ def is_configured() -> bool:
     return bool(settings.aiven_postgres_url)
 
 
+_pool = None
+_pool_failed = False
+
+
+def _get_pool():
+    """Lazily build a shared psycopg connection pool, reused across all queries and
+    threads. Critical fix: opening a fresh TLS connection per message starved the Kafka
+    consumer cross-cloud (each handshake ~hundreds of ms; a hung one froze the consume
+    loop past Kafka's max.poll.interval, getting it kicked from the group). connect_timeout
+    bounds a stalled handshake so it fails fast instead of hanging. Returns None (and we
+    fall back to per-call connections) if psycopg_pool isn't installed."""
+    global _pool, _pool_failed
+    if _pool is None and not _pool_failed:
+        try:
+            from psycopg_pool import ConnectionPool
+            _pool = ConnectionPool(settings.aiven_postgres_url, min_size=1, max_size=6,
+                                   kwargs={"connect_timeout": 10}, open=True)
+        except Exception as e:  # noqa: BLE001 — degrade gracefully to per-call connections
+            _pool_failed = True
+            print(f"[db] psycopg_pool unavailable ({e}); using per-call connections. "
+                  "Install psycopg[binary,pool] for the pooled fast path.")
+    return _pool
+
+
 def get_connection():
-    """Return a live psycopg connection. Use as a context manager."""
+    """Borrow a pooled connection (preferred) or a direct one with a bounded handshake
+    (fallback). Use as a context manager: `with get_connection() as conn`."""
     if not is_configured():
         raise RuntimeError("AIVEN_POSTGRES_URL not set (check .env).")
+    pool = _get_pool()
+    if pool is not None:
+        return pool.connection()
     import psycopg
-    return psycopg.connect(settings.aiven_postgres_url)
+    return psycopg.connect(settings.aiven_postgres_url, connect_timeout=10)
 
 
 def init_tables() -> None:
@@ -73,6 +100,16 @@ def init_tables() -> None:
     with get_connection() as conn, conn.cursor() as cur:
         for stmt in _SCHEMA:
             cur.execute(stmt)
+        # One-time: dedupe tracks, then a UNIQUE (mmsi, ts) so a re-published position
+        # (double-ingest, or a slow vessel repeating its last fix across polls) can't
+        # duplicate. Guarded on the index's absence so the table scan runs only once.
+        cur.execute("SELECT 1 FROM pg_indexes WHERE indexname = 'uq_tracks_mmsi_ts'")
+        if not cur.fetchone():
+            cur.execute("DELETE FROM tracks a USING tracks b "
+                        "WHERE a.id > b.id AND a.mmsi = b.mmsi AND a.ts = b.ts")
+            cur.execute("CREATE UNIQUE INDEX uq_tracks_mmsi_ts ON tracks (mmsi, ts)")
+            cur.execute("DROP INDEX IF EXISTS idx_tracks_mmsi_ts")
+        conn.commit()
     print("[db] tables ready")
 
 

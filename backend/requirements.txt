@@ -7,8 +7,9 @@ python-dotenv==1.0.1
 # Kafka (Aiven) — H1+
 confluent-kafka==2.6.1
 
-# Postgres (Aiven) — H1+
-psycopg[binary]==3.2.3
+# Postgres (Aiven) — H1+. [pool] adds psycopg_pool so state_builder reuses connections
+# instead of a fresh TLS handshake per message (that starved the Kafka consumer cross-cloud).
+psycopg[binary,pool]==3.2.3
 SQLAlchemy==2.0.36
 
 # Geo + data foundation — Person A

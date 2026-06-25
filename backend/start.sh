@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Single-container launcher for the Aiven Application service.
-# Runs the two always-on workers (auto-restarting) in the background and
-# uvicorn in the foreground as PID 1. The 60s ingest poll is also the Kafka
-# heartbeat, so keeping it alive keeps the free-tier broker warm.
+# Single-container launcher. uvicorn runs in the foreground as PID 1 (serves the
+# console/API/agents). The ingest + state_builder workers run ONLY when this host is
+# the designated single writer (RUN_WORKERS=true) — see the gate below — so two hosts
+# never double-ingest or fight over the Kafka partition.
 set -uo pipefail
 
 # Write the Kafka CA from an env var (the cert is gitignored, not baked into the image),
@@ -22,7 +22,17 @@ run_forever () {
   done
 }
 
-run_forever python -m app.data_pipeline.ingest &
-run_forever python -m app.data_pipeline.state_builder &
+# Single-writer gate: run ingest + state_builder ONLY on the one host designated with
+# RUN_WORKERS=true. Everywhere else (e.g. Railway serving the console) stays serve-only.
+case "${RUN_WORKERS:-false}" in
+  1|true|TRUE|yes|YES|on)
+    echo "[start] RUN_WORKERS=$RUN_WORKERS -> launching ingest + state_builder"
+    run_forever python -m app.data_pipeline.ingest &
+    run_forever python -m app.data_pipeline.state_builder &
+    ;;
+  *)
+    echo "[start] RUN_WORKERS off -> serve-only (no ingest/state_builder)"
+    ;;
+esac
 
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"
