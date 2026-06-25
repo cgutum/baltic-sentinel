@@ -1,36 +1,35 @@
 """Investigation conductor — Person B.
 
-Runs the investigation-loop architecture:
+Runs a lean investigation workflow that feeds the autonomous Sentinel:
 
   suspicion arrives
-   -> deterministic raw evidence pulled from Aiven
-   -> ONE parallel batch (everything that doesn't depend on another agent):
-        Aiven Evidence Librarian (SQL + MCP), OSINT Researcher (web; questions
-        seeded from the vessel identity), Case Controller, and the Identity /
-        Maritime Behavior / Infrastructure Environment analysts
-   -> Watch Officer produces the verdict from findings + enrichment
-   -> Action Briefing Agent produces report / email / voice payload
+   -> deterministic raw evidence pulled from Aiven (track, history, nearby,
+      sanctions, IMO check, GPS, cable)
+   -> ONE parallel batch:
+        * Maritime Analyst         — judges identity / behaviour / environment
+        * Aiven Evidence Librarian — digs Aiven via SQL + MCP service health
+        * OSINT Researcher         — web search (questions seeded from the identity)
+   -> Watch Officer (Opus) produces the calibrated verdict
+   -> render_briefing (deterministic) builds the report / email / voice payload
+   -> record_watch hands a monitoring record to the Sentinel
 
 No canned data and no special-case logic — Eagle S is treated like any vessel.
 When evidence is missing, agents say so and the verdict's confidence drops.
 
-Latency note: the enrichment used to be a serial chain (Librarian -> Controller
--> OSINT), which stacked the two slowest calls (MCP relay + web search) back to
-back. Running the whole batch concurrently collapses that into the single slowest
-call, and read-only agents submit in one round-trip (agent_base force_first).
+This is deliberately a WORKFLOW (fast, code-orchestrated). The genuinely autonomous,
+stateful, tool-driven agent is the Sentinel (sentinel.py).
 """
 
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 from ..models import AgentFinding
-from . import (action_briefing, behavior_agent, case_controller, evidence_librarian,
-               gps_environment_agent, identity_agent, osint_researcher, synthesis_agent, tools)
+from . import analyst, evidence_librarian, osint_researcher, synthesis_agent, tools
 
 # Hard wall-clock cap (s) for the parallel batch. The Aiven MCP connector / web
 # search can occasionally stall; past this we proceed with whatever completed, so
 # an investigation ALWAYS finishes well under the UI poll window.
-_PARALLEL_BUDGET_SEC = 190
+_PARALLEL_BUDGET_SEC = 220
 
 
 def _gather_raw(suspicion: dict) -> dict:
@@ -74,7 +73,7 @@ def _result_summary(key: str, res) -> str:
     """Human-readable one-liner of an agent's output, for the conductor log."""
     if res is None:
         return "no result"
-    if key in ("Identity & Records", "Maritime Behavior", "Infrastructure Environment"):
+    if key == "Maritime Analyst":
         return f"{len(res)} finding(s)"
     if key == "Aiven Evidence Librarian":
         return (f"summary={'yes' if res.get('summary') else 'no'}, "
@@ -83,10 +82,43 @@ def _result_summary(key: str, res) -> str:
     if key == "OSINT Researcher":
         return (f"{len(res.get('findings', []))} web finding(s), "
                 f"{len(res.get('unresolved', []))} unresolved")
-    if key == "Case Controller":
-        return (f"{len(res.get('research_questions', []))} research question(s), "
-                f"evidence_complete={res.get('evidence_complete')}")
     return "ok"
+
+
+def _build_watch(suspicion: dict, raw: dict, case: dict, assessment: dict,
+                 findings: list[dict]) -> dict:
+    """Distil the investigation into a durable monitoring record for the Sentinel:
+    the verdict baseline, the observable signals to watch, what's still unresolved,
+    and what should trigger a re-check."""
+    gps = raw.get("gps") or {}
+    cable = raw.get("cable") or {}
+    signals: list[str] = []
+    if gps.get("in_jammed_zone"):
+        signals.append("inside a GPS-jamming zone")
+    if cable.get("inside_corridor"):
+        signals.append(f"inside cable corridor: {cable.get('nearest_cable')}")
+    elif cable.get("nearest_cable") is not None:
+        signals.append(f"near cable {cable.get('nearest_cable')} (~{cable.get('distance_km')} km)")
+    for r in (raw.get("scoring_reasons") or []):
+        signals.append(f"score reason: {r}")
+    for f in findings:
+        if (f.get("severity") or 0) >= 0.6:
+            signals.append(f"{f.get('agent')}: {str(f.get('finding'))[:120]}")
+    lib = case.get("librarian") or {}
+    osint = case.get("osint") or {}
+    open_q = [str(g) for g in (lib.get("gaps") or [])] + \
+             [str(u) for u in (osint.get("unresolved") or [])]
+    triggers = [
+        "new track points for this MMSI",
+        "re-enters a cable corridor or GPS-jamming zone",
+        "a new suspicion_event fires for this MMSI",
+        "scheduled review (next_review_at)",
+    ]
+    return {"mmsi": suspicion.get("mmsi"), "name": suspicion.get("name"),
+            "imo": suspicion.get("imo"), "suspicion_id": suspicion.get("suspicion_id"),
+            "level": assessment.get("level"), "confidence": assessment.get("confidence"),
+            "watch_signals": signals[:12], "open_questions": open_q[:12],
+            "recheck_triggers": triggers, "status": "paused"}  # operator activates the Sentinel
 
 
 def run_once(suspicion: dict) -> dict:
@@ -97,21 +129,16 @@ def run_once(suspicion: dict) -> dict:
     print(f"[conductor] raw: track={len(raw['track'])}pts nearby={len(raw['nearby'])} "
           f"sanctions_listed={raw['sanctions'].get('listed')} gps={raw['gps'].get('available')}")
 
-    # ONE parallel batch: every step that doesn't depend on another agent's output.
-    # The analysts work off the deterministic raw evidence; OSINT's questions are
-    # seeded from the vessel identity (so it no longer waits on the Librarian +
-    # Controller). The Watch Officer later sees the analysts' findings AND the
-    # Librarian/OSINT enrichment, so nothing is lost.
-    analyst_case = {"suspicion": suspicion, "raw": raw, "librarian": None,
-                    "controller": None, "osint": {"findings": [], "unresolved": []}}
+    # ONE parallel batch: the Analyst judges the raw evidence while the Librarian
+    # (Aiven SQL + MCP) and OSINT (web) gather in parallel. OSINT's questions are
+    # seeded from the vessel identity. The Watch Officer later sees the Analyst's
+    # findings AND the Librarian/OSINT enrichment, so nothing is lost.
+    analyst_case = {"suspicion": suspicion, "raw": raw}
     osint_questions = _seed_osint_questions(suspicion)
     jobs = {
-        "Identity & Records": lambda: identity_agent.run(analyst_case),
-        "Maritime Behavior": lambda: behavior_agent.run(analyst_case),
-        "Infrastructure Environment": lambda: gps_environment_agent.run(analyst_case),
+        "Maritime Analyst": lambda: analyst.run(analyst_case),
         "Aiven Evidence Librarian": lambda: evidence_librarian.run(suspicion, raw, osint=None),
         "OSINT Researcher": lambda: osint_researcher.run(suspicion, osint_questions),
-        "Case Controller": lambda: case_controller.run(suspicion, raw, None, None),
     }
     print(f"[conductor] running {len(jobs)} agents in parallel: {', '.join(jobs)}")
     results: dict = {}
@@ -133,9 +160,7 @@ def run_once(suspicion: dict) -> dict:
     finally:
         ex.shutdown(wait=False)  # don't block on an abandoned slow agent
 
-    findings: list[dict] = []
-    for key in ("Identity & Records", "Maritime Behavior", "Infrastructure Environment"):
-        findings.extend(results.get(key) or [])
+    findings: list[dict] = list(results.get("Maritime Analyst") or [])
     for f in findings:
         try:
             AgentFinding(**f)  # drift guard vs contracts.md
@@ -146,13 +171,23 @@ def run_once(suspicion: dict) -> dict:
     # Verdict + deliverables (Watch Officer sees findings + the enrichment).
     case = {"suspicion": suspicion, "raw": raw,
             "librarian": results.get("Aiven Evidence Librarian"),
-            "controller": results.get("Case Controller"),
             "osint": results.get("OSINT Researcher") or {"findings": [], "unresolved": []}}
     assessment = synthesis_agent.run(case, findings)
     print(f"[conductor] verdict {assessment['level']} (confidence={assessment['confidence']})")
     voice = tools.create_voice_briefing(assessment["voice_script"], sid)
     tools.save_assessment(assessment, voice_path=voice["voice_path"])
-    briefing = action_briefing.run(case, assessment, findings)
+    briefing = tools.render_briefing(raw.get("vessel", {}), assessment, findings)
+
+    # Hand off to the Sentinel — but ONLY if the verdict warrants ongoing monitoring
+    # (the agent's call). Benign LOW verdicts are not added. It lands 'paused' so the
+    # operator explicitly activates the Sentinel on it.
+    if assessment["level"] in ("MEDIUM", "HIGH"):
+        watch = _build_watch(suspicion, raw, case, assessment, findings)
+        tools.record_watch(watch)
+        print(f"[conductor] added to watchlist (paused) for {watch['mmsi']} "
+              f"({len(watch['watch_signals'])} signals) — operator can activate the Sentinel on it")
+    else:
+        print(f"[conductor] verdict {assessment['level']} — benign, not added to watchlist")
 
     print("[conductor] done")
     return {"suspicion": suspicion, "evidence": raw, "librarian": case["librarian"],

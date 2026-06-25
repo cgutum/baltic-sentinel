@@ -38,16 +38,27 @@ _SYSTEM = (
     "or its neighbours, repeated patterns near the same cable. Then report: a SUMMARY of "
     "what Aiven reliably tells us, ADDITIONAL_FINDINGS from your own queries, and GAPS "
     "(what Aiven does NOT tell us and would need external research). Base everything on "
-    "real query results. If a query returns nothing, say the data is absent — never invent.\n\n"
-    "If Aiven MCP tools (named `aiven_*`) are available, you may also use them for live "
-    "Aiven service/infrastructure context (projects, services, service queries). "
-    "Be efficient: make only a few targeted queries (and at most one or two MCP calls) "
-    "before calling submit_evidence — do not explore exhaustively."
+    "real query results. aiven_query accepts ONLY plain read-only SELECT/WITH statements "
+    "(no SHOW/EXPLAIN/DDL/DML — they are rejected). If a query returns nothing, say the "
+    "data is absent — never invent.\n\n"
+    "You also have the official Aiven MCP tools (`aiven_*`). Use them when they genuinely "
+    "help judge how much to TRUST this evidence: confirm the Aiven service backing the "
+    "data is healthy and how fresh the ingest is (recent service activity / metrics / "
+    "logs). Fold that into your SUMMARY as data-provenance, and into GAPS if the data "
+    "looks stale or the pipeline looks unhealthy. Don't call MCP just to call it — skip "
+    "it if it adds nothing. Be efficient: a few targeted queries (plus at most one MCP "
+    "health check), then call submit_evidence.\n\n"
+    "IMPORTANT: after 2-3 queries STOP querying and call submit_evidence with your summary "
+    "+ findings + gaps. Never keep querying until you run out of turns — a thin-but-real "
+    "summary ('Aiven shows N tracks and no prior events for this vessel') is far better "
+    "than an empty submission."
 )
 
 _TOOLS = [
     {"name": "aiven_query",
-     "description": "Run a read-only SQL SELECT/WITH against Aiven Postgres. Returns rows.",
+     "description": "Run a READ-ONLY SQL SELECT/WITH against Aiven Postgres (writes/DDL are "
+                    "rejected — query only). Columns: tracks(...,ts,source); vessels(mmsi,name,"
+                    "flag,last_seen,suspicion_score,...); suspicion_events(...,ts). Returns rows.",
      "input_schema": {"type": "object",
                       "properties": {"sql": {"type": "string"},
                                      "max_rows": {"type": "integer"}},
@@ -94,10 +105,10 @@ def run(suspicion: dict, raw: dict, osint: dict | None = None) -> dict | None:
     if settings.aiven_mcp_token and len(settings.aiven_mcp_token) > 20:
         mcp = [{"type": "url", "name": "aiven", "url": settings.aiven_mcp_url,
                 "authorization_token": settings.aiven_mcp_token}]
-    # Fast bail (35s, no retry): the Aiven MCP connector can stall, and the Librarian
-    # must not eat the enrichment budget and starve OSINT. When MCP is responsive it
-    # contributes; when it isn't, the Librarian returns None and the loop moves on.
+    # 60s/request, no retry: enough for a genuine Aiven MCP service-health check to
+    # complete (the connector is slow) while still bailing rather than hanging. The
+    # Librarian runs in parallel with OSINT (the long pole), so this is hidden.
     return agent_base.run_tool_loop(agent_name=AGENT, system=_SYSTEM, user=user,
                                     submit_tool=_SUBMIT, tool_defs=_TOOLS,
-                                    dispatch=dispatch, max_steps=3, mcp_servers=mcp,
-                                    client_timeout=35.0, max_retries=0)
+                                    dispatch=dispatch, max_steps=5, mcp_servers=mcp,
+                                    client_timeout=60.0, max_retries=0)
