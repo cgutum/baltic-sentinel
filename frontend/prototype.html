@@ -145,7 +145,7 @@ const SIM_AGENTS=[{n:"Identity & Flag",c:"+10",f:"Cook Islands flag of convenien
 function inPort(lon,lat){return PORTS.some(p=>{const dx=(lon-p[1])*111.32*Math.cos(lat*Math.PI/180),dy=(lat-p[2])*110.574;return Math.hypot(dx,dy)<=7;});}
 function ensure(fc){(fc.features||[]).forEach(f=>{const c=f.geometry.coordinates;f.properties.__lon=c[0];f.properties.__lat=c[1];if(f.properties.risk&&f.properties.risk!=='safe'&&inPort(c[0],c[1])){f.properties.risk='safe';f.properties.__inport=true;}});return fc;}
 ensure(D.vessels);
-let VES=D.vessels, liveOk=false, curMmsi=EAGLE.mmsi, curVoice="", autoDone=false, selMarker=null;
+let VES=D.vessels, liveOk=false, curMmsi=EAGLE.mmsi, curVoice="", curAudioUrl="", voiceAudio=null, autoDone=false, selMarker=null;
 const EAGLE_ELS=[];
 // Gulf of Finland navigable centreline (lon,lat), W->E. Synthetic trails follow it so
 // projected routes stay in water (never cross land) and read like real gulf transits.
@@ -248,7 +248,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.classL
 // dossier
 const agentsEl=$('agents');
 function setReasons(l){$('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
-function resetVerdict(){$('verdict').classList.remove('show');const b=$('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';_setConf(null);}
+function resetVerdict(){$('verdict').classList.remove('show');const b=$('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';_setConf(null);
+  curVoice="";curAudioUrl="";if(voiceAudio){voiceAudio.pause();}if(window.speechSynthesis)speechSynthesis.cancel();}
 function _setConf(c){const w=$('d_confwrap'),arc=$('d_confarc');if(c==null||isNaN(c)){if(w)w.style.visibility='visible';d('d_conf','—');if(arc)arc.setAttribute('stroke-dasharray','0 81.7');return;}if(w)w.style.visibility='visible';d('d_conf',Number(c).toFixed(2));const C=81.68,f=Math.max(0,Math.min(1,Number(c)))*C;if(arc)arc.setAttribute('stroke-dasharray',f.toFixed(1)+' '+(C-f).toFixed(1));}
 function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';showSelection(EAGLE.lon,EAGLE.lat);setTrack(null);highlightName('Estlink 2');}
 function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);$('d_fill').style.width=(p.score||0)+'%';const lv=$('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);resetVerdict();const b=$('launch');b.style.display=t==='safe'?'none':'block';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';
@@ -278,11 +279,42 @@ function renderFindings(findings,a){agentsEl.innerHTML='';findings.forEach((f,i)
   setTimeout(()=>finishVerdict(a),findings.length*700+700);}
 function finishVerdict(a){const conf=Math.round((a.confidence||0)*100);const lv=$('d_level');lv.textContent=a.level||'DONE';lv.style.color=a.level==='HIGH'?'var(--threat)':a.level==='MEDIUM'?'var(--watch)':'var(--safe)';
   _setConf(a.confidence);if(a.score!=null)d('d_score',a.score);$('launch').textContent='✓ Investigation complete';
-  const v=$('verdict');v.classList.add('show');$('v_story').textContent=a.summary||'';d('v_rec',a.recommended_action||'');curVoice=a.voice_script||a.summary||'';$('v_voicelbl').textContent='▶ play spoken briefing';if(a.reasoning&&a.reasoning.length)setReasons(a.reasoning);}
+  const v=$('verdict');v.classList.add('show');$('v_story').textContent=a.summary||'';d('v_rec',a.recommended_action||'');curVoice=a.voice_script||a.summary||'';
+  curAudioUrl=a.suspicion_id?`${BACKEND}/voice/audio/${a.suspicion_id}`:'';$('v_voicelbl').textContent='▶ play spoken briefing';if(a.reasoning&&a.reasoning.length)setReasons(a.reasoning);
+  playBriefing(true);}  // auto-narrate the verdict (silently falls back / no-ops if the browser blocks autoplay)
 function simSwarm(){agentsEl.innerHTML='';SIM_AGENTS.forEach((a,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${a.n}</span><span class="ac" style="visibility:hidden">${a.c}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);});let total=0;
   SIM_AGENTS.forEach((a,i)=>setTimeout(()=>{const el=$('ag'+i);el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=a.f;total+=parseInt(a.c.replace('+',''));d('d_score',total);$('d_fill').style.width=total+'%';if(i===SIM_AGENTS.length-1){const lv=$('d_level');lv.textContent='HIGH';lv.style.color='var(--threat)';_setConf(0.86);$('launch').textContent='✓ Investigation complete (demo)';const v=$('verdict');v.classList.add('show');$('v_story').textContent='A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS is untrustworthy. It went dark after leaving Ust-Luga. Score 90/100, confidence 0.86.';d('v_rec','Escalate to coast guard and notify the cable operator. Task an independent sensor to verify.');curVoice='High risk alert. Suspicious vessel movement detected near Estlink 2. Recommend human escalation and independent verification.';$('v_voicelbl').textContent='▶ play spoken briefing';}},700);},i*900));}
 $('launch').onclick=()=>runInvestigation(curMmsi);
-$('voice').onclick=()=>{if(curVoice&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(curVoice);u.rate=1.0;u.pitch=0.9;speechSynthesis.cancel();speechSynthesis.speak(u);}};
+// Spoken briefing: ALWAYS the ElevenLabs voice. The backend regenerates the MP3 on
+// demand if it's missing, so a fresh GET to the audio URL returns real audio. We try
+// to play it; if the first attempt fails for a load reason, we force generation (a
+// plain fetch) and retry. The on-device computer voice is a last resort only — used
+// solely when there's no investigation audio at all (e.g. the simulated demo path).
+function speakFallback(){if(curVoice&&window.speechSynthesis){const u=new SpeechSynthesisUtterance(curVoice);u.rate=1.0;u.pitch=0.9;speechSynthesis.cancel();speechSynthesis.speak(u);}}
+function _playUrl(url){return new Promise((resolve,reject)=>{
+  if(!voiceAudio||voiceAudio.dataset.url!==url){voiceAudio=new Audio(url);voiceAudio.dataset.url=url;}
+  if(window.speechSynthesis)speechSynthesis.cancel();
+  let done=false;const settle=(fn,v)=>{if(done)return;done=true;voiceAudio.onerror=null;fn(v);};
+  voiceAudio.onerror=()=>settle(reject,new Error('audio load error'));
+  try{voiceAudio.currentTime=0;}catch(_){}
+  const p=voiceAudio.play();
+  if(p&&p.then)p.then(()=>settle(resolve)).catch(e=>settle(reject,e));else settle(resolve);
+});}
+async function playBriefing(auto){
+  const url=curAudioUrl;                                         // capture so a state reset can't corrupt the retry
+  if(!url){if(!auto)speakFallback();return;}                     // no real audio (sim path)
+  try{await _playUrl(url);return;}                               // backend generates on miss
+  catch(e){
+    if(e&&e.name==='NotAllowedError'){if(!auto)speakFallback();return;} // autoplay blocked: wait for click
+    console.warn('[voice] play failed, forcing ElevenLabs generation…',e&&e.message);
+  }
+  try{
+    await fetch(url,{cache:'no-store'});                         // force backend to (re)generate
+    voiceAudio=null;                                             // fresh element, cache-busted URL
+    await _playUrl(url+(url.indexOf('?')>=0?'&':'?')+'t='+Date.now());
+  }catch(e2){console.warn('[voice] ElevenLabs still unavailable, using on-device voice',e2&&e2.message);if(!auto)speakFallback();}
+}
+$('voice').onclick=()=>playBriefing(false);
 renderFeed();openDz();selEagle();
 
 // --- Sentinel: autonomous-monitor panel (self-contained) ------------------

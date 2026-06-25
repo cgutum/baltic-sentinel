@@ -119,14 +119,23 @@ def _get_producer():
 
 
 def publish(topic: str, message: dict) -> None:
-    """Publish a JSON message to a Kafka topic."""
+    """Publish a JSON message to a Kafka topic — BEST-EFFORT.
+
+    Kafka here is streaming telemetry (the Aiven "bridge"); the UI reads results over
+    HTTP, not Kafka. A broker hiccup or a missing topic (_UNKNOWN_TOPIC) must NEVER
+    break the caller: an investigation's verdict + voice are produced and persisted
+    independently of this. So any Kafka error is logged and swallowed.
+    """
     payload = json.dumps(message)
     if not is_configured():
         print(f"[kafka:stub] would publish to {topic}: {payload}")
         return
-    p = _get_producer()
-    p.produce(topic, payload.encode("utf-8"))
-    p.flush(5)
+    try:
+        p = _get_producer()
+        p.produce(topic, payload.encode("utf-8"))
+        p.flush(5)
+    except Exception as e:  # noqa: BLE001 — telemetry only; never fail the investigation
+        print(f"[kafka] publish to {topic} skipped ({e})", flush=True)
 
 
 def consume(topic: str, group_id: str | None = None, offset_reset: str = "earliest"):

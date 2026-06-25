@@ -311,11 +311,39 @@ def assessment_latest():
 
 @router.get("/voice/latest")
 def voice_latest():
-    """Return the latest voice briefing path. TODO real ElevenLabs (H13)."""
+    """Return the latest voice briefing: script + whether real ElevenLabs audio is
+    ready and where to fetch it. If no audio, the UI falls back to on-device speech."""
     a = _last_result.get("assessment")
-    if a:
-        return {"ok": True, "voice_script": a.get("voice_script")}
-    return JSONResponse(status_code=404, content={"ok": False, "error": "no voice yet"})
+    if not a:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "no voice yet"})
+    from app.agent_workflow import voice
+    sid = a.get("suspicion_id")
+    ready = bool(sid) and voice.audio_path(sid).exists()
+    return {"ok": True, "suspicion_id": sid, "voice_script": a.get("voice_script"),
+            "audio_ready": ready, "audio_url": f"/voice/audio/{sid}" if ready else None}
+
+
+@router.get("/voice/audio/{suspicion_id}")
+def voice_audio(suspicion_id: str):
+    """Stream the ElevenLabs MP3 for an investigation. If the file isn't on disk yet
+    (original generation failed transiently, or this is an older investigation), we
+    REGENERATE it on demand from the stored voice script — so every vessel always gets
+    the ElevenLabs voice, never the on-device fallback."""
+    from app.agent_workflow import voice, tools
+    p = voice.audio_path(suspicion_id)
+    if not p.exists():
+        script = None
+        a = _last_result.get("assessment")
+        if a and a.get("suspicion_id") == suspicion_id:
+            script = (a.get("voice_script") or a.get("summary") or "").strip() or None
+        if not script:
+            script = tools.get_voice_script(suspicion_id)  # older runs: pull from Postgres
+        if script:
+            print(f"[voice] regenerating on-demand for {suspicion_id}")
+            voice.synthesize(script, suspicion_id)
+    if p.exists():
+        return FileResponse(str(p), media_type="audio/mpeg", filename=f"{suspicion_id}.mp3")
+    return JSONResponse(status_code=404, content={"ok": False, "error": "no audio for this id"})
 
 
 @router.get("/events")

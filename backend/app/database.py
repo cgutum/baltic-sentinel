@@ -71,8 +71,21 @@ def _get_pool():
     if _pool is None and not _pool_failed:
         try:
             from psycopg_pool import ConnectionPool
+
+            def _reset(conn):
+                # Read helpers (aiven_query, get_watchlist) flip the connection to
+                # read-only as defence-in-depth. Without resetting it on return, the
+                # next borrower inherits read-only and every INSERT/UPDATE fails with
+                # "cannot execute INSERT in a read-only transaction". Clear it here.
+                try:
+                    conn.rollback()
+                    if getattr(conn, "read_only", False):
+                        conn.read_only = False
+                except Exception:  # noqa: BLE001
+                    pass
+
             _pool = ConnectionPool(settings.aiven_postgres_url, min_size=1, max_size=6,
-                                   kwargs={"connect_timeout": 10}, open=True)
+                                   kwargs={"connect_timeout": 10}, reset=_reset, open=True)
         except Exception as e:  # noqa: BLE001 — degrade gracefully to per-call connections
             _pool_failed = True
             print(f"[db] psycopg_pool unavailable ({e}); using per-call connections. "

@@ -32,7 +32,6 @@ from ..kafka_client import (
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_VOICE_OUT = _REPO_ROOT / "demo_assets" / "sample_voice.mp3"
 
 
 # --------------------------------------------------------------------------- #
@@ -333,14 +332,39 @@ def render_briefing(vessel: dict, assessment: dict, findings: list[dict]) -> dic
             "email_body": body, "voice_script": assessment.get("voice_script", "")}
 
 
+def get_voice_script(suspicion_id: str) -> str | None:
+    """Look up the stored voice script (or summary) for a past assessment, so the audio
+    endpoint can regenerate ElevenLabs audio on demand for ANY vessel — not just the
+    latest one. Returns None if there's no record."""
+    if not database.is_configured():
+        return None
+    try:
+        from psycopg.rows import dict_row
+        with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("SELECT voice_script, summary FROM assessments WHERE suspicion_id = %s",
+                        (str(suspicion_id),))
+            row = cur.fetchone()
+        if not row:
+            return None
+        return ((row.get("voice_script") or row.get("summary") or "").strip()) or None
+    except Exception as e:  # noqa: BLE001
+        print(f"[tools] get_voice_script failed ({e})")
+        return None
+
+
 def create_voice_briefing(voice_script: str, suspicion_id: str) -> dict:
-    """Package the voice briefing payload. Real ElevenLabs audio is not wired yet
-    (H13) — this publishes the script + intended path; it does NOT fake audio."""
-    path = str(_VOICE_OUT)
-    print(f"[voice] briefing payload ready -> {path} ({len(voice_script)} chars; audio not generated yet)")
-    publish(TOPIC_VOICE_BRIEFING,
-            {"suspicion_id": suspicion_id, "voice_path": path, "voice_script": voice_script})
-    return {"voice_path": path, "audio_generated": False}
+    """Generate the spoken briefing with ElevenLabs, persist the MP3, and publish the
+    payload. Real audio only: if generation isn't possible the payload carries
+    audio_generated=False and the UI falls back to on-device speech (no faked audio)."""
+    from . import voice
+    result = voice.synthesize(voice_script, suspicion_id)
+    publish(TOPIC_VOICE_BRIEFING, {
+        "suspicion_id": suspicion_id,
+        "voice_path": result.get("voice_path"),
+        "voice_script": voice_script,
+        "audio_generated": result.get("audio_generated", False),
+    })
+    return result
 
 
 # --------------------------------------------------------------------------- #

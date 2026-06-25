@@ -174,7 +174,9 @@ def run_once(suspicion: dict) -> dict:
             "osint": results.get("OSINT Researcher") or {"findings": [], "unresolved": []}}
     assessment = synthesis_agent.run(case, findings)
     print(f"[conductor] verdict {assessment['level']} (confidence={assessment['confidence']})")
-    voice = tools.create_voice_briefing(assessment["voice_script"], sid)
+    # Always hand ElevenLabs a non-empty script so every investigation gets real audio.
+    script = (assessment.get("voice_script") or assessment.get("summary") or "").strip()
+    voice = tools.create_voice_briefing(script, sid)
     tools.save_assessment(assessment, voice_path=voice["voice_path"])
     briefing = tools.render_briefing(raw.get("vessel", {}), assessment, findings)
 

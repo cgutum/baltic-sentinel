@@ -19,8 +19,12 @@ class Settings(BaseSettings):
     # Anthropic (Person B agents)
     anthropic_api_key: str = ""
 
-    # ElevenLabs (Person B voice)
+    # ElevenLabs (Person B voice). Default voice is "Daniel — Steady Broadcaster",
+    # a calm, authoritative narrator that suits a watch-officer briefing. The model
+    # is the higher-quality multilingual one (scripts are short, so latency is fine).
     elevenlabs_api_key: str = ""
+    elevenlabs_voice_id: str = "onwK4e9ZLuTAKqWW03F9"  # Daniel — Steady Broadcaster
+    elevenlabs_model_id: str = "eleven_multilingual_v2"
 
     # Aiven Kafka
     aiven_kafka_bootstrap: str = ""
