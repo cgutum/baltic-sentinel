@@ -65,7 +65,8 @@ INVESTIGATION PLANE (on operator demand)
 ```
 
 The Kafka topic names and message shapes are the shared contract between the two halves of
-the system — see [contracts.md](contracts.md).
+the system — see [contracts.md](contracts.md). For rendered Mermaid diagrams and exactly
+**where/when Kafka and the Aiven MCP are invoked**, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
