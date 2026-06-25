@@ -1,9 +1,9 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Baltic Sentinel — Dossier (refined v2)</title>
+<title>Baltic Sentinel — Dossier (refined v3)</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#060A12;--panel:#0C121E;--panel2:#0A0F1A;--line:#1B2740;--text:#D7DEEA;--muted:#8595AD;--faint:#56657F;--cyan:#4CC9E6;--threat:#F4543D;--watch:#F2B441;--safe:#3FB68B;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--news:'Newsreader',Georgia,serif}
+:root{--bg:#070C16;--panel:#0C121E;--panel2:#0A0F1A;--line:#1B2740;--line2:#283651;--text:#D7DEEA;--muted:#8595AD;--faint:#56657F;--cyan:#4CC9E6;--threat:#F4543D;--watch:#F2B441;--safe:#3FB68B;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--news:'Newsreader',Georgia,serif}
 *{box-sizing:border-box}
 body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);min-height:100vh;padding:30px 18px 50px}
 .lead{max-width:860px;margin:0 auto 20px;text-align:center}
@@ -14,24 +14,29 @@ body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);min-h
 .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;color:var(--faint);text-transform:uppercase;margin-bottom:9px;text-align:center}
 .tag b{color:var(--cyan);font-weight:500}
 
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+/* panel — match console: subtle 3px radius, 2px inner */
+.panel{background:var(--panel);border:1px solid var(--line2);border-radius:3px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5)}
 .dh{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.13em;color:var(--muted)}
 .dh .x{color:var(--faint)}
 .bd{padding:15px 17px 18px}
 
-/* identity — name, info stacked underneath (Option B style) */
+/* identity — name, info stacked underneath */
 .nm{font-family:var(--news);font-weight:600;font-size:26px;line-height:1.04;letter-spacing:-.01em}
 .meta{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55;font-family:var(--mono);letter-spacing:.01em}
 
-/* threat band — level + score number + bare confidence ring */
-.band{display:flex;align-items:center;gap:13px;margin:15px 0 2px;padding:11px 13px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
+/* threat band — level + score number + confidence value (with small ring) */
+.band{display:flex;align-items:center;gap:12px;margin:15px 0 2px;padding:10px 13px;background:var(--panel2);border:1px solid var(--line);border-radius:2px}
 .band .lv{font-weight:700;font-size:12.5px;letter-spacing:.05em;color:var(--threat);display:flex;align-items:center;gap:7px}
-.band .score{margin-left:auto;font-family:var(--mono);font-size:23px;font-weight:500;line-height:1}
-.band .score s{color:var(--faint);text-decoration:none;font-size:13px}
-.band .ring{flex:none}
+.band .right{margin-left:auto;display:flex;align-items:center;gap:13px}
+.band .score{font-family:var(--mono);font-size:22px;font-weight:500;line-height:1}
+.band .score s{color:var(--faint);text-decoration:none;font-size:12px}
+.band .conf{display:flex;align-items:center;gap:7px;padding-left:13px;border-left:1px solid var(--line)}
+.band .conf .cv{display:flex;flex-direction:column;line-height:1.05}
+.band .conf .cv b{font-family:var(--mono);font-size:14px;font-weight:500}
+.band .conf .cv em{font-style:normal;font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin-top:2px}
 
-/* launch — orange, border only (not filled) */
-.launch{display:block;width:100%;margin:15px 0 2px;background:transparent;border:1px solid var(--watch);border-left:3px solid var(--watch);color:var(--watch);font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:11px;text-align:center;cursor:pointer;border-radius:4px}
+/* launch — orange, border only, 2px */
+.launch{display:block;width:100%;margin:15px 0 2px;background:transparent;border:1px solid var(--watch);border-left:3px solid var(--watch);color:var(--watch);font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:11px;text-align:center;cursor:pointer;border-radius:2px;text-transform:uppercase}
 .hint{font-size:11.5px;color:var(--faint);margin-top:10px;font-style:italic}
 
 .hd{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;margin:18px 0 8px;display:flex;align-items:center;gap:9px}
@@ -43,15 +48,15 @@ body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);min-h
 .ind .r .t{flex:1;color:#C7D2E4}
 .ind .r .w{font-family:var(--mono);font-size:11px;color:var(--watch)}
 .assess{font-family:var(--news);font-size:15px;line-height:1.55;color:#E7EDF6}
-.do{display:flex;gap:9px;margin-top:12px;padding:10px 12px;border-radius:7px;background:rgba(244,84,61,.09);border:1px solid rgba(244,84,61,.32);font-size:12.5px;line-height:1.4;color:#E9C7C0}
+.do{display:flex;gap:9px;margin-top:12px;padding:10px 12px;border-radius:2px;background:rgba(244,84,61,.09);border:1px solid rgba(244,84,61,.32);font-size:12.5px;line-height:1.4;color:#E9C7C0}
 .do b{color:var(--threat);font-weight:700;font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding-top:1px}
 .play{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:15px}
 .play .pl{width:23px;height:23px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--cyan)}
-.done{display:block;width:100%;margin:15px 0 2px;background:transparent;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:11px;text-align:center;border-radius:4px}
+.done{display:block;width:100%;margin:15px 0 2px;background:transparent;border:1px solid var(--line);color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.08em;padding:11px;text-align:center;border-radius:2px;text-transform:uppercase}
 </style></head><body>
 <div class="lead">
-  <h1>Dossier — refined v2</h1>
-  <p>Header renamed to Dossier. Info stacked under the name. Score keeps the number with a bare confidence ring beside it. Launch is an orange outline. Indicators + assessment only appear after the agent has run — shown as two states below.</p>
+  <h1>Dossier — refined v3</h1>
+  <p>Tightened to the console's instrument-panel corners (3px panel / 2px inner, like the live Gotham), and the confidence value is now stated next to the score with its ring (Option-A style). Indicators + assessment still appear only after the agent runs.</p>
 </div>
 <div class="row">
 
@@ -65,13 +70,18 @@ body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);min-h
         <div class="meta">Tanker · IMO 9329760<br>MMSI 518998000 · 🇨🇰 Cook Islands · 1.6 kn</div>
         <div class="band">
           <span class="lv">⚠ HIGH</span>
-          <span class="score">90<s>/100</s></span>
-          <svg class="ring" width="34" height="34" viewBox="0 0 34 34">
-            <circle cx="17" cy="17" r="13" fill="none" stroke="#22324d" stroke-width="3"/>
-            <circle cx="17" cy="17" r="13" fill="none" stroke="#4CC9E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="70.2 11.5" transform="rotate(-90 17 17)"/>
-          </svg>
+          <span class="right">
+            <span class="score">90<s>/100</s></span>
+            <span class="conf">
+              <svg width="32" height="32" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#22324d" stroke-width="3"/>
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#4CC9E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="70.2 11.5" transform="rotate(-90 16 16)"/>
+              </svg>
+              <span class="cv"><b>0.86</b><em>conf</em></span>
+            </span>
+          </span>
         </div>
-        <button class="launch">▶ LAUNCH INVESTIGATION</button>
+        <button class="launch">▶ Launch investigation</button>
         <div class="hint">Operator can launch an investigation. Findings and the watch-officer assessment appear here once the agents run.</div>
       </div>
     </div>
@@ -87,13 +97,18 @@ body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);min-h
         <div class="meta">Tanker · IMO 9329760<br>MMSI 518998000 · 🇨🇰 Cook Islands · 1.6 kn</div>
         <div class="band">
           <span class="lv">⚠ HIGH</span>
-          <span class="score">90<s>/100</s></span>
-          <svg class="ring" width="34" height="34" viewBox="0 0 34 34">
-            <circle cx="17" cy="17" r="13" fill="none" stroke="#22324d" stroke-width="3"/>
-            <circle cx="17" cy="17" r="13" fill="none" stroke="#4CC9E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="70.2 11.5" transform="rotate(-90 17 17)"/>
-          </svg>
+          <span class="right">
+            <span class="score">90<s>/100</s></span>
+            <span class="conf">
+              <svg width="32" height="32" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#22324d" stroke-width="3"/>
+                <circle cx="16" cy="16" r="13" fill="none" stroke="#4CC9E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="70.2 11.5" transform="rotate(-90 16 16)"/>
+              </svg>
+              <span class="cv"><b>0.86</b><em>conf</em></span>
+            </span>
+          </span>
         </div>
-        <button class="done">✓ INVESTIGATION COMPLETE</button>
+        <button class="done">✓ Investigation complete</button>
 
         <div class="hd">Indicators · 4 agents</div>
         <div class="ind">
