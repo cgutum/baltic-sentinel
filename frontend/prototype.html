@@ -11,17 +11,20 @@
 :root{--bg:#070C16;--surface:#0A1120;--surface2:#0E1626;--line:#1B2740;--line2:#283651;--text:#CDD8EA;--muted:#7E8DA9;--faint:#566480;
 --safe:#3FB68B;--watch:#F2B441;--threat:#F4543D;--cyan:#4CC9E6;--jam:#6B7FD7;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;overflow:hidden}
-.app{display:grid;grid-template-rows:46px 1fr;height:100vh}
-.topbar{display:flex;align-items:center;gap:12px;padding:0 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0A1120,#070C16);z-index:30}
-.menu{background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-size:15px;line-height:1;padding:6px 9px;cursor:pointer}.menu:hover{border-color:var(--cyan)}
-.brand{font-weight:600;letter-spacing:.15em;font-size:12px;white-space:nowrap}.brand b{color:#fff}.brand .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--threat);box-shadow:0 0 9px var(--threat);margin-right:8px;animation:pulse 2s infinite}
-.seg{display:flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden;font-size:11px}.seg button{background:transparent;color:var(--muted);border:0;padding:5px 11px;cursor:pointer;font-family:var(--sans)}.seg button.on{background:var(--cyan);color:#06121a;font-weight:600}
-.search{position:relative;flex:0 1 330px}.search .mag{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none}
-.search input{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 10px 6px 28px}.search input:focus{outline:none;border-color:var(--cyan)}
-.results{position:absolute;top:34px;left:0;right:0;background:var(--surface);border:1px solid var(--line2);border-radius:3px;max-height:320px;overflow:auto;z-index:40;display:none}.results.show{display:block}.results div{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.results div:hover{background:var(--surface2)}.results .rk{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.app{display:grid;grid-template-rows:55px 1fr;height:100vh}
+.topbar{display:flex;align-items:center;gap:14px;padding:0 15px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0A1120,#070C16);z-index:30}
+.menu{background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-size:18px;line-height:1;padding:7px 11px;cursor:pointer}.menu:hover{border-color:var(--cyan)}
+.brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.15em;font-size:14px;white-space:nowrap}.brand b{color:#fff}.brand .logo-mark{flex:none;width:31px;height:31px;filter:drop-shadow(0 0 5px rgba(76,201,230,.45))}.brand .logo-mark .sweep{animation:radar 6s linear infinite;transform-origin:32px 32px}@keyframes radar{to{transform:rotate(360deg)}}
+.seg{display:flex;border:1px solid var(--line2);border-radius:3px;overflow:hidden;font-size:13px}.seg button{background:transparent;color:var(--muted);border:0;padding:6px 13px;cursor:pointer;font-family:var(--sans)}.seg button.on{background:var(--cyan);color:#06121a;font-weight:600}
+.search{position:relative;flex:0 1 360px}.search .mag{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.search input{width:100%;background:var(--surface2);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:14px;padding:7px 11px 7px 31px}.search input:focus{outline:none;border-color:var(--cyan)}
+.results{position:absolute;top:38px;left:0;right:0;background:var(--surface);border:1px solid var(--line2);border-radius:3px;max-height:320px;overflow:auto;z-index:40;display:none}.results.show{display:block}.results div{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}.results div:hover{background:var(--surface2)}.results .rk{font-family:var(--mono);font-size:10px;color:var(--faint)}
 .spacer{flex:1}
-.sources{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;white-space:nowrap}.sources a{display:flex;align-items:center;gap:5px;color:var(--muted);text-decoration:none}.sources a:hover{color:var(--cyan)}.sources a::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--safe);box-shadow:0 0 5px var(--safe)}
-.clock{font-family:var(--mono);color:var(--text);font-size:12px;letter-spacing:.05em}
+.sources{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:12px;white-space:nowrap}.sources a{display:flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none}.sources a:hover{color:var(--cyan)}.sources a::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--safe);box-shadow:0 0 5px var(--safe)}
+.clock{font-family:var(--mono);color:var(--text);font-size:14px;letter-spacing:.05em}
+/* topbar fits narrow laptops: shrink the flexible bits first, then drop the source links */
+@media (max-width:1440px){.topbar{gap:11px;padding:0 12px}.search{flex:0 1 300px}.sources{gap:11px;font-size:11px}}
+@media (max-width:1200px){.brand{font-size:13px}.brand .logo-mark{width:28px;height:28px}.seg button{padding:6px 10px}.search{flex:0 1 240px}.sources{display:none}}
 .mapwrap{position:relative;min-width:0;overflow:hidden}#map{position:absolute;inset:0}.maplibregl-ctrl-attrib{font-size:9px;opacity:.45}
 .rail{position:absolute;top:0;left:0;bottom:0;width:312px;background:rgba(10,17,32,.96);border-right:1px solid var(--line);backdrop-filter:blur(8px);z-index:15;display:flex;flex-direction:column;transform:translateX(-104%);transition:transform .26s ease}.rail.open{transform:none}
 .rail h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:12px 14px 9px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.rail h2 .x{cursor:pointer;color:var(--faint)}
@@ -79,6 +82,7 @@
 .launch::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--watch)}
 .launch:hover{background:rgba(242,180,65,.12);filter:none}
 .launch.done{border-color:var(--line2);color:var(--muted)}.launch.done::before{background:var(--line2)}
+.launchhint{margin:-4px 14px 10px;font-size:11px;color:var(--watch);font-family:var(--mono);letter-spacing:.02em;display:flex;align-items:flex-start;gap:6px;line-height:1.4}.launchhint .hi{flex:none}
 .agent{border-radius:2px}.agent .an{font-family:var(--mono);font-size:11px;letter-spacing:.03em}
 .verdict{border-radius:2px}.verdict .rec span{color:var(--text);font-family:var(--sans)}
 .voice{border-radius:2px}
@@ -137,7 +141,7 @@
 <div class="app">
   <div class="topbar">
     <button class="menu" id="menu" title="Alerts">≡</button>
-    <span class="brand"><span class="dot"></span><b>BALTIC</b> SENTINEL</span>
+    <span class="brand"><svg class="logo-mark" viewBox="0 0 64 64" width="26" height="26" role="img" aria-label="Baltic Sentinel"><defs><linearGradient id="bsSweep" x1="32" y1="32" x2="56" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4CC9E6" stop-opacity=".55"/><stop offset="1" stop-color="#4CC9E6" stop-opacity="0"/></linearGradient><clipPath id="bsClip"><circle cx="32" cy="32" r="21.5"/></clipPath></defs><circle cx="32" cy="32" r="27" fill="none" stroke="#4CC9E6" stroke-opacity=".5" stroke-width="2.5"/><circle cx="32" cy="32" r="21.5" fill="none" stroke="#4CC9E6" stroke-opacity=".85" stroke-width="1.4"/><g clip-path="url(#bsClip)"><path class="sweep" d="M32 32 L32 6 A26 26 0 0 1 56 22 Z" fill="url(#bsSweep)"/><path d="M14 41 Q32 50 50 41" fill="none" stroke="#4CC9E6" stroke-opacity=".7" stroke-width="1.4"/><path d="M18 46 Q32 53 46 46" fill="none" stroke="#4CC9E6" stroke-opacity=".42" stroke-width="1.3"/></g><line x1="32" y1="32" x2="15.5" y2="18.5" stroke="#9BE5F5" stroke-width="1.6" stroke-linecap="round"/><circle cx="15.5" cy="18.5" r="3" fill="#fff"/><circle cx="32" cy="32" r="2.6" fill="#4CC9E6"/></svg><span><b>BALTIC</b> SENTINEL</span></span>
     <div class="seg" id="mode"><button class="on" data-m="infra">Infrastructure</button><button data-m="fish">Fisheries</button></div>
     <div class="search"><span class="mag">⌕</span><input id="q" placeholder="Search ship · infrastructure · port" autocomplete="off"><div class="results" id="res"></div></div>
     <div class="spacer"></div>
@@ -179,6 +183,7 @@
       <div class="statusline" id="d_status" style="display:none"></div>
       <div id="d_timeline" style="padding:0 14px 8px"></div>
       <button class="launch" id="launch">▶ Launch Investigation</button>
+      <div class="launchhint" id="launchhint" style="display:none"><span class="hi">⚠</span><span>Investigation in progress — keep this window open until it finishes (can take a few minutes).</span></div>
       <div class="seclabel">Agent findings</div>
       <div class="agents" id="agents"></div>
       <div class="verdict" id="verdict"><div class="seclabel" style="border-top:0;padding-top:2px">Watch-officer assessment</div><div class="story" id="v_story"></div><div class="rec"><b>Recommended action</b><span id="v_rec"></span></div>
@@ -318,6 +323,7 @@ function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'I
   showSelection(p.__lon,p.__lat);showTrackFor(p);if(p.risk==='threat')highlightNear(p.__lon,p.__lat);else setCable(null);restoreInvestigation(p.mmsi);}
 // real investigation (B's agents) with simulated fallback
 async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contains('done'))return;b.classList.add('done');b.textContent='● Investigation running…';const lv=$('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';
+  const hint=$('launchhint');if(hint)hint.style.display='flex';
   dossierWidth(true);renderWorking([],null);
   const t0=Date.now();
   try{
@@ -336,7 +342,8 @@ async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contain
     if(!j||!j.findings)throw new Error('timeout/no findings');
     LAST_INVEST_TS=j.finished_at||null;renderFindings(j.findings,j.assessment||{});renderTimeline(mmsi);
   }
-  catch(e){console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
+  catch(e){console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}
+  finally{const h=$('launchhint');if(h)h.style.display='none';}}
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function openLog(html){$('logbody').innerHTML=html;$('logmodal').classList.add('show');}
 $('logx').onclick=()=>$('logmodal').classList.remove('show');
