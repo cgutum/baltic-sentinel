@@ -34,7 +34,7 @@
 .btn{background:rgba(7,12,22,.85);border:1px solid var(--line2);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:11px;padding:6px 11px;cursor:pointer}.btn:hover{border-color:var(--cyan)}.btn.spin{color:var(--cyan)}
 .ov{font-family:var(--mono);font-size:10px;color:var(--muted);background:rgba(7,12,22,.72);border:1px solid var(--line);border-radius:4px;padding:6px 10px;letter-spacing:.04em}.ov b{color:var(--cyan)}
 /* layers + legend (bottom-left, interactive) */
-.layerbox{position:absolute;left:12px;bottom:12px;z-index:6;background:rgba(7,12,22,.86);border:1px solid var(--line);border-radius:4px;backdrop-filter:blur(6px);font-family:var(--mono);font-size:10px;min-width:210px}
+.layerbox{position:absolute;left:400px;bottom:12px;z-index:6;background:rgba(7,12,22,.86);border:1px solid var(--line);border-radius:4px;backdrop-filter:blur(6px);font-family:var(--mono);font-size:10px;min-width:210px}
 .lhdr{padding:7px 11px;letter-spacing:.16em;color:var(--muted);cursor:pointer;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.lhdr:hover{color:var(--cyan)}
 .lbody{padding:5px 0}.lbody.collapsed{display:none}
 .lr{display:flex;align-items:center;gap:8px;padding:4px 11px;cursor:pointer;color:var(--muted);opacity:.42}.lr.on{opacity:1}.lr:hover{background:var(--surface2)}
@@ -45,7 +45,7 @@
 .selbox{width:40px;height:40px;position:relative;pointer-events:none}
 .selbox span{position:absolute;width:10px;height:10px;border:2px solid var(--cyan)}
 .selbox .c1{top:0;left:0;border-right:0;border-bottom:0}.selbox .c2{top:0;right:0;border-left:0;border-bottom:0}.selbox .c3{bottom:0;left:0;border-right:0;border-top:0}.selbox .c4{bottom:0;right:0;border-left:0;border-top:0}
-.dz{position:absolute;top:12px;right:12px;width:344px;max-height:calc(100% - 24px);overflow:auto;z-index:7;background:rgba(8,14,26,.94);border:1px solid var(--line2);border-radius:6px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45)}.dz.hidden{display:none}
+.dz{position:absolute;top:16px;right:16px;width:344px;height:calc(100% - 130px);overflow:visible;display:flex;flex-direction:column;z-index:7;background:rgba(8,14,26,.94);border:1px solid var(--line2);border-radius:6px;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.45)}.dz.hidden{display:none}
 .dz h2{font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:0;padding:11px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.dz h2 .x{cursor:pointer;color:var(--faint)}
 .idcard{padding:12px 14px}.idcard .nm{font-size:19px;font-weight:700}.idcard .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:3px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin-top:10px;font-size:12px}.kv .k{color:var(--faint);font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;align-self:center}.kv .v{font-family:var(--mono)}
@@ -56,9 +56,10 @@
 .agents{padding:0 14px 4px}.agent{border:1px solid var(--line);border-left:2px solid var(--line2);border-radius:3px;padding:9px 10px;margin-bottom:7px;opacity:.4;transform:translateY(6px);transition:all .35s;background:var(--surface2)}.agent.live{opacity:1;transform:none;border-left-color:var(--cyan)}.agent.done{opacity:1;transform:none;border-left-color:var(--safe)}
 .agent .ah{display:flex;justify-content:space-between}.agent .an{font-weight:600;font-size:12px}.agent .ac{font-family:var(--mono);font-size:11px;color:var(--threat)}.agent .af{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4}.agent .sp{font-family:var(--mono);font-size:10px;color:var(--cyan)}
 .verdict{margin:6px 14px 14px;border:1px solid rgba(244,84,61,.35);border-radius:4px;padding:12px;background:rgba(244,84,61,.06);opacity:0;transition:opacity .4s}.verdict.show{opacity:1}
-.verdict .story{font-family:var(--serif);font-size:15px;line-height:1.5;color:#fff}.verdict .rec{margin-top:9px;font-size:11.5px;border-top:1px solid var(--line);padding-top:8px}.verdict .rec b{color:var(--watch);font-family:var(--mono);font-size:10px;letter-spacing:.08em;display:block;text-transform:uppercase;margin-bottom:3px}
+.verdict .story{font-size:15px;line-height:1.45;color:#fff}.verdict .rec{margin-top:10px;font-size:12px;line-height:1.5;border-top:1px solid var(--line);padding-top:9px}.verdict .rec b{color:var(--watch);font-family:var(--mono);font-size:10px;letter-spacing:.08em;display:block;text-transform:uppercase;margin-bottom:4px}
 .voice{margin-top:10px;display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;padding:7px 10px;cursor:pointer}.voice .play{width:22px;height:22px;border-radius:50%;background:var(--cyan);color:#06121a;display:flex;align-items:center;justify-content:center;font-size:10px}.voice .wave{flex:1;height:16px;background:repeating-linear-gradient(90deg,var(--line2) 0 2px,transparent 2px 5px)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}@keyframes hp{0%,100%{box-shadow:0 0 12px var(--threat)}50%{box-shadow:0 0 22px var(--threat)}}@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}.sb_name.blink{animation:blink 1s ease-in-out infinite;color:var(--cyan);text-shadow:0 0 8px var(--cyan)}
 .spin span{display:inline-block;animation:sp .8s linear infinite}
 ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
 /* dossier — Gotham instrument refinement */
@@ -79,8 +80,59 @@
 .launch:hover{background:rgba(242,180,65,.12);filter:none}
 .launch.done{border-color:var(--line2);color:var(--muted)}.launch.done::before{background:var(--line2)}
 .agent{border-radius:2px}.agent .an{font-family:var(--mono);font-size:11px;letter-spacing:.03em}
-.verdict{border-radius:2px}.verdict .rec{font-family:var(--mono)}.verdict .rec span{color:var(--text)}
+.verdict{border-radius:2px}.verdict .rec span{color:var(--text);font-family:var(--sans)}
 .voice{border-radius:2px}
+/* findings ticks + full-log modal */
+.tick{display:flex;gap:7px;padding:4px 14px;font-size:11px;color:var(--muted);align-items:baseline;cursor:pointer}
+.tick:hover{color:var(--text)}.tick .ck{color:var(--safe);font-weight:700}
+.fmore{color:var(--cyan);cursor:pointer;font-family:var(--mono);font-size:10px}
+.modal{position:fixed;inset:0;background:rgba(3,6,12,.66);z-index:10000;display:none;align-items:center;justify-content:center;padding:24px}
+.modal.show{display:flex}
+.modal-card{background:var(--surface);border:1px solid var(--line2);border-radius:6px;max-width:680px;width:100%;max-height:82vh;overflow:auto;padding:16px 20px;font-size:12px;line-height:1.55;color:var(--text)}
+.modal-card h3{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--cyan);text-transform:uppercase;margin:14px 0 4px}.modal-card h3:first-child{margin-top:0}
+.modal-card .x{float:right;cursor:pointer;color:var(--faint);font-size:14px}
+.modal-card p{margin:4px 0}.modal-card ul{margin:4px 0;padding-left:18px;color:var(--muted)}
+/* edge-resize handles (dossier) */
+.rsz{position:absolute;z-index:8}
+.rsz-n{top:0;left:10px;right:10px;height:6px;cursor:ns-resize}.rsz-s{bottom:0;left:10px;right:10px;height:6px;cursor:ns-resize}
+.rsz-e{right:0;top:10px;bottom:10px;width:6px;cursor:ew-resize}.rsz-w{left:0;top:10px;bottom:10px;width:6px;cursor:ew-resize}
+.rsz-nw{top:0;left:0;width:12px;height:12px;cursor:nwse-resize}.rsz-ne{top:0;right:0;width:12px;height:12px;cursor:nesw-resize}
+.rsz-sw{bottom:0;left:0;width:12px;height:12px;cursor:nesw-resize}.rsz-se{bottom:0;right:0;width:12px;height:12px;cursor:nwse-resize}
+.dzbody{overflow:auto;flex:1;min-height:0}
+.statusline{display:flex;align-items:center;gap:7px;margin:0 14px 8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--line);border-radius:3px;font-size:11px;color:var(--muted)}
+.dotb{width:7px;height:7px;border-radius:50%;background:var(--safe);box-shadow:0 0 7px var(--safe);flex:none}.dotb.off{background:var(--faint);box-shadow:none}
+.tlrow{display:flex;gap:9px;padding:7px 0;border-top:1px solid var(--line)}.tlic{flex:none;font-size:13px}
+.tlc{min-width:0;flex:1}.tlh{font-size:12px;font-weight:600;color:var(--text)}.tld{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5}.tlt{font-family:var(--mono);font-size:9px;color:var(--faint);margin-top:3px}
+.working{display:flex;align-items:center;gap:9px;padding:6px 14px;font-size:11.5px}
+.wdot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.2s infinite;flex:none}
+.shimmer{background:linear-gradient(90deg,var(--muted) 0%,#dfe9ff 50%,var(--muted) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shim 2.4s linear infinite}
+@keyframes shim{to{background-position:-200% 0}}
+.wdone{display:flex;gap:8px;padding:3px 14px;font-size:11px;color:var(--muted);align-items:flex-start;animation:fadein .25s}
+.wck{color:var(--safe);flex:none}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.frow{padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.frow:hover .fag{color:#fff}
+.fhead{display:flex;align-items:center;gap:8px}
+.fdot{width:7px;height:7px;border-radius:50%;flex:none}
+.fag{color:var(--text);font-weight:600;font-size:11.5px;flex:1;min-width:0;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fsev{font-family:var(--mono);font-size:9px;color:var(--faint);flex:none}
+.fcar{flex:none;color:var(--faint);font-size:9px;transition:transform .2s}
+.ftext{font-size:12px;line-height:1.55;color:var(--muted);margin-top:5px;padding-left:15px}
+.fev{display:block;margin-top:7px;color:var(--faint);font-size:11px}
+.vhead{font-size:14px;font-weight:600;color:var(--text);line-height:1.4}
+/* in-place text reveal: same element grows from its clamped lines to full height */
+.exp{overflow:hidden;transition:max-height .45s cubic-bezier(.4,0,.2,1)}
+.exp.c3{max-height:4.7em}.exp.c0{max-height:0}
+.vbody{font-size:12px;line-height:1.6;color:var(--muted);margin-top:8px;padding-left:2px}
+.vbody p{margin:0 0 7px}.vbody p:last-child{margin-bottom:0}.vbody ul{margin:6px 0 0;padding-left:16px}.vbody li{margin:2px 0}
+/* collapsible: animates to true content height via grid-template-rows 0fr→1fr */
+.xdetail{display:grid;grid-template-rows:0fr;opacity:.4;transition:grid-template-rows .42s cubic-bezier(.4,0,.2,1),opacity .42s ease}
+.xdetail.open{grid-template-rows:1fr;opacity:1}
+.xdetail>.xin{overflow:hidden;min-height:0}
+.tlsent{background:rgba(60,200,120,.08);border-left:2px solid var(--safe);border-top-color:transparent!important;border-radius:0 4px 4px 0;padding-left:8px;margin:3px 0}
+.tltag{display:inline-block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--safe);background:rgba(60,200,120,.16);border-radius:2px;padding:1px 4px;margin-right:5px;vertical-align:middle}
+.sb_live .shimmer{font-size:10px}
+.wcard:hover{border-color:var(--cyan)!important}
 </style></head><body>
 <div class="app">
   <div class="topbar">
@@ -117,21 +169,25 @@
     </div>
     <div class="readout" id="ro">59.900 N · 026.250 E</div>
     <aside class="dz" id="dz"><h2>Dossier <span class="x" id="dzx">✕</span></h2>
+      <div class="dzbody">
       <div class="seclabel">Identity</div>
       <div class="idcard"><div class="nm" id="d_name">—</div><div class="sub" id="d_sub"></div>
         <div class="kv"><div class="k">Flag</div><div class="v" id="d_flag">—</div><div class="k">Speed</div><div class="v" id="d_speed">—</div><div class="k">Near</div><div class="v" id="d_cable">—</div><div class="k">Origin</div><div class="v" id="d_origin">—</div></div></div>
       <div class="seclabel">Threat score</div>
       <div class="scorebar"><span class="lv" id="d_level">—</span><span class="right"><span class="sc"><span id="d_score">0</span><span class="den">/100</span></span><span class="conf" id="d_confwrap"><svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="#22324d" stroke-width="3"/><circle id="d_confarc" cx="16" cy="16" r="13" fill="none" stroke="#4CC9E6" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 81.7" transform="rotate(-90 16 16)"/></svg><span class="cv"><b id="d_conf">—</b><em>conf</em></span></span></span><div id="d_fill" style="display:none"></div></div>
-      <div class="seclabel">Signals</div>
-      <ul class="reasons" id="d_reasons"></ul>
+      <div class="seclabel" id="d_tl_label" style="display:none">Sentinel updates</div>
+      <div class="statusline" id="d_status" style="display:none"></div>
+      <div id="d_timeline" style="padding:0 14px 8px"></div>
       <button class="launch" id="launch">▶ Launch Investigation</button>
       <div class="seclabel">Agent findings</div>
       <div class="agents" id="agents"></div>
       <div class="verdict" id="verdict"><div class="seclabel" style="border-top:0;padding-top:2px">Watch-officer assessment</div><div class="story" id="v_story"></div><div class="rec"><b>Recommended action</b><span id="v_rec"></span></div>
         <div class="voice" id="voice"><div class="play">▶</div><div class="wave"></div><span style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="v_voicelbl">play briefing</span></div></div>
+      </div>
     </aside>
   </div>
 </div>
+<div class="modal" id="logmodal"><div class="modal-card"><span class="x" id="logx">✕</span><div id="logbody"></div></div></div>
 <script>
 const _api=new URLSearchParams(location.search).get('api');const BACKEND=_api!==null?_api:(location.protocol==='file:'?'http://localhost:8000':'');
 const D=window.BS_DATA||{vessels:{type:'FeatureCollection',features:[]},cables:{type:'FeatureCollection',features:[]},jamming:{type:'FeatureCollection',features:[]}};
@@ -247,41 +303,134 @@ q.oninput=()=>{const v=q.value.trim().toLowerCase();if(v.length<2){res.classList
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.classList.remove('show');});
 // dossier
 const agentsEl=$('agents');
-function setReasons(l){$('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
+function setReasons(l){const box=$('d_reasons');if(!box)return;l=l||[];const SHOW=3;
+  if(!l.length){box.innerHTML='';return;}
+  const li=(r,i)=>'<li'+(i>=SHOW?' class="rxtra" style="display:none"':'')+'>'+escapeHtml(r)+'</li>';
+  box.innerHTML=l.map(li).join('')
+    +(l.length>SHOW?'<div class="fmore" id="d_reasons_tog" style="margin-top:5px">show all ('+l.length+') ▾</div>':'');
+  const tog=$('d_reasons_tog');
+  if(tog)tog.onclick=()=>{const xs=box.querySelectorAll('.rxtra'),open=xs[0].style.display==='none';
+    xs.forEach(x=>x.style.display=open?'list-item':'none');tog.textContent=open?'show less ▴':'show all ('+l.length+') ▾';};}
 function resetVerdict(){$('verdict').classList.remove('show');const b=$('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';_setConf(null);
-  curVoice="";curAudioUrl="";if(voiceAudio){voiceAudio.pause();}if(window.speechSynthesis)speechSynthesis.cancel();}
+  curVoice="";curAudioUrl="";if(voiceAudio){voiceAudio.pause();}if(window.speechSynthesis)speechSynthesis.cancel();
+  LAST_FINDINGS=[];LAST_ASSESS={};LAST_INVEST_TS=null;const tl=$('d_timeline');if(tl)tl.innerHTML='';const tll=$('d_tl_label');if(tll)tll.style.display='none';const st=$('d_status');if(st)st.style.display='none';}
 function _setConf(c){const w=$('d_confwrap'),arc=$('d_confarc');if(c==null||isNaN(c)){if(w)w.style.visibility='visible';d('d_conf','—');if(arc)arc.setAttribute('stroke-dasharray','0 81.7');return;}if(w)w.style.visibility='visible';d('d_conf',Number(c).toFixed(2));const C=81.68,f=Math.max(0,Math.min(1,Number(c)))*C;if(arc)arc.setAttribute('stroke-dasharray',f.toFixed(1)+' '+(C-f).toFixed(1));}
-function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';showSelection(EAGLE.lon,EAGLE.lat);setTrack(null);highlightName('Estlink 2');}
+function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';showSelection(EAGLE.lon,EAGLE.lat);setTrack(null);highlightName('Estlink 2');restoreInvestigation(EAGLE.mmsi);}
 function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);$('d_fill').style.width=(p.score||0)+'%';const lv=$('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);resetVerdict();const b=$('launch');b.style.display=t==='safe'?'none':'block';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';
-  showSelection(p.__lon,p.__lat);showTrackFor(p);if(p.risk==='threat')highlightNear(p.__lon,p.__lat);else setCable(null);}
+  showSelection(p.__lon,p.__lat);showTrackFor(p);if(p.risk==='threat')highlightNear(p.__lon,p.__lat);else setCable(null);restoreInvestigation(p.mmsi);}
 // real investigation (B's agents) with simulated fallback
 async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contains('done'))return;b.classList.add('done');b.textContent='● Investigation running…';const lv=$('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';
-  agentsEl.innerHTML='<div class="agent live" style="opacity:1;transform:none"><div class="ah"><span class="an">Investigation team</span></div><div class="af"><span class="sp" id="agtick">● running Claude agents on live Aiven data… (deep investigation, ~2-5 min)</span></div></div>';
-  const t0=Date.now();const tick=setInterval(()=>{const el=document.getElementById('agtick');if(el)el.textContent=`● investigating on live Aiven data… ${Math.floor((Date.now()-t0)/1000)}s elapsed (deep investigation, ~2-5 min)`;},1000);
+  dossierWidth(true);renderWorking([],null);
+  const t0=Date.now();
   try{
     const r=await fetch(`${BACKEND}/agent/investigate/${mmsi}`,{method:'POST'});if(!r.ok)throw new Error('http '+r.status);
     let j=null;const deadline=Date.now()+480000;  // poll up to 8 min
     while(Date.now()<deadline){
-      await new Promise(res=>setTimeout(res,4000));
+      await new Promise(res=>setTimeout(res,3000));
       const pr=await fetch(`${BACKEND}/agent/result/${mmsi}`,{cache:'no-store'});
       if(pr.status===500){const ej=await pr.json().catch(()=>({}));throw new Error(ej.error||'agent error');}
       if(!pr.ok)continue;  // job not registered yet — keep polling
       const pj=await pr.json();
+      if(String(curMmsi)!==String(mmsi))return;  // user switched vessels
+      if(pj.status==='running')renderWorking(pj.progress||[],Math.floor((Date.now()-t0)/1000));
       if(pj.status==='done'){j=pj;break;}
     }
-    clearInterval(tick);
     if(!j||!j.findings)throw new Error('timeout/no findings');
-    renderFindings(j.findings,j.assessment||{});
+    LAST_INVEST_TS=j.finished_at||null;renderFindings(j.findings,j.assessment||{});renderTimeline(mmsi);
   }
-  catch(e){clearInterval(tick);console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
-function renderFindings(findings,a){agentsEl.innerHTML='';findings.forEach((f,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${f.agent||'Agent'}</span><span class="ac" style="visibility:hidden">sev ${(f.severity!=null?f.severity:0).toFixed(2)}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);
-    setTimeout(()=>{el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=f.finding||'';},500);},i*700);});
-  setTimeout(()=>finishVerdict(a),findings.length*700+700);}
+  catch(e){console.warn('[agent] backend unavailable, simulating:',e.message);simSwarm();}}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function openLog(html){$('logbody').innerHTML=html;$('logmodal').classList.add('show');}
+$('logx').onclick=()=>$('logmodal').classList.remove('show');
+$('logmodal').onclick=e=>{if(e.target.id==='logmodal')$('logmodal').classList.remove('show');};
+function findingHtml(f){const sev=(f.severity!=null?f.severity:0).toFixed(2);return '<h3>'+escapeHtml(f.agent||'Finding')+' · sev '+sev+'</h3><p>'+escapeHtml(f.finding||'')+'</p>'+((f.evidence&&f.evidence.length)?'<p style="color:var(--faint)">Evidence: '+escapeHtml(f.evidence.join('  ·  '))+'</p>':'');}
+let LAST_FINDINGS=[],LAST_ASSESS={},LAST_INVEST_TS=null;
+const SENT_RUNNING=new Map();  // mmsi -> current "doing" text while a Sentinel run is live
+function _sentBlink(mmsi,on){const nm=document.querySelector('#snt_list .sb_name[data-mmsi="'+mmsi+'"]');if(nm)nm.classList.toggle('blink',on);}
+function sentLiveLabel(mmsi,text){mmsi=String(mmsi);const live=text!=null&&text!=='';
+  if(!live)SENT_RUNNING.delete(mmsi);else SENT_RUNNING.set(mmsi,text);
+  const el=document.querySelector('#snt_list .sb_live[data-mmsi="'+mmsi+'"]');
+  if(el)el.innerHTML=live?'<span class="shimmer">● '+escapeHtml(text)+'</span>':'';
+  _sentBlink(mmsi,live);}
+function sentReapply(){SENT_RUNNING.forEach((text,mmsi)=>{const el=document.querySelector('#snt_list .sb_live[data-mmsi="'+mmsi+'"]');if(el)el.innerHTML='<span class="shimmer">● '+escapeHtml(text)+'</span>';_sentBlink(mmsi,true);});}
+function fullLogHtml(){let h='';(LAST_FINDINGS||[]).forEach(f=>{h+=findingHtml(f);});const a=LAST_ASSESS||{};if(a.summary){h+='<h3>Watch-officer assessment — '+escapeHtml(a.level||'')+' ('+(a.confidence!=null?a.confidence:'')+')</h3>'+assessmentHtml(a,true);}return h||'<p>No findings.</p>';}
+function assessmentHtml(a,includeRec){let h='<p>'+escapeHtml(a.summary||'')+'</p>';if(a.reasoning&&a.reasoning.length)h+='<ul>'+a.reasoning.map(r=>'<li>'+escapeHtml(r)+'</li>').join('')+'</ul>';if(includeRec&&a.recommended_action)h+='<p><b>Recommended action:</b> '+escapeHtml(a.recommended_action)+'</p>';return h;}
+function renderWorking(steps,elapsed){
+  // Incremental: append newly-completed steps once (so they don't re-animate/blink each
+  // poll) and update a single live shimmer line in place.
+  steps=steps||[];
+  let box=agentsEl.querySelector('#worklist');
+  if(!box){agentsEl.innerHTML='<div id="worklist"></div>';box=agentsEl.querySelector('#worklist');box._n=0;}
+  let live=box.querySelector('.working');
+  const isDone=steps.length&&/^done\.?$/i.test(steps[steps.length-1]);
+  const doneTarget=isDone?steps.length:Math.max(0,steps.length-1);
+  for(let i=box._n;i<doneTarget;i++){const d=document.createElement('div');d.className='wdone';
+    d.innerHTML='<span class="wck">✓</span><span>'+escapeHtml(steps[i])+'</span>';
+    if(live)box.insertBefore(d,live);else box.appendChild(d);}
+  box._n=Math.max(box._n,doneTarget);
+  if(isDone){if(live)live.remove();return;}
+  const cur=steps.length?steps[steps.length-1]:'starting investigation…';
+  const label=escapeHtml(cur)+(steps.length&&elapsed!=null?'  ·  '+elapsed+'s':'');
+  if(live){live.querySelector('.shimmer').innerHTML=label;}
+  else{live=document.createElement('div');live.className='working';
+    live.innerHTML='<span class="wdot"></span><span class="shimmer">'+label+'</span>';box.appendChild(live);}
+}
+// In-place reveal: grow the SAME text element from its clamped height to its full
+// content height (and back), so expanding continues the visible lines instead of
+// dropping a separate full-text block below.
+function toggleText(t,car){const opening=t.dataset.o!=='1';t.dataset.o=opening?'1':'0';
+  t.style.maxHeight=opening?t.scrollHeight+'px':'';if(car)car.textContent=opening?'▾':'▸';return opening;}
+// Findings are all from the Maritime Analyst; the model tags each with its dimension
+// in '[BRACKETS]'. Use that bracket as the differentiated label and strip it from the body.
+function findingTag(f){let txt=String(f.finding||'').trim(),tag=f.agent||'Agent';
+  const m=txt.match(/^\[([^\]]+)\]\s*/);if(m){tag=m[1].trim();txt=txt.slice(m[0].length).trim();}
+  return [tag,txt];}
+// Hide the expand caret on any clamped element that isn't actually overflowing.
+function markExpandable(container){if(!container)return;container.querySelectorAll('.exp').forEach(t=>{
+  const host=t.closest('.frow,.tlrow'),car=host&&host.querySelector('.fcar');if(!car)return;
+  if(t.clientHeight>0&&t.scrollHeight<=t.clientHeight+2){car.style.visibility='hidden';host.style.cursor='default';}});}
+const DZ_W_NORMAL=344;
+// Investigated / investigating vessels widen the dossier — its content matters more
+// than the map underneath. Re-anchored to the right edge so it grows leftward.
+function dossierWidth(wide){const dz=$('dz');if(!dz)return;
+  dz.style.left='auto';dz.style.right='16px';dz.style.maxWidth='none';
+  dz.style.width=(wide?Math.min(680,Math.max(DZ_W_NORMAL,window.innerWidth-380)):DZ_W_NORMAL)+'px';}
+function renderFindings(findings,a){
+  LAST_FINDINGS=findings||[];LAST_ASSESS=a||{};agentsEl.innerHTML='';dossierWidth(true);
+  const sorted=[...(findings||[])].sort((x,y)=>(y.severity||0)-(x.severity||0));
+  sorted.forEach(f=>{const sev=f.severity!=null?f.severity:0;
+    const col=sev>=0.6?'var(--threat)':sev>=0.3?'var(--watch)':'var(--safe)';
+    const [tag,txt]=findingTag(f);
+    const ev=(f.evidence&&f.evidence.length)?'<span class="fev">Evidence: '+escapeHtml(f.evidence.join('  ·  '))+'</span>':'';
+    const el=document.createElement('div');el.className='frow';
+    el.innerHTML='<div class="fhead"><span class="fdot" style="background:'+col+'"></span>'
+      +'<span class="fag">'+escapeHtml(tag)+'</span><span class="fsev">'+sev.toFixed(2)+'</span><span class="fcar">▸</span></div>'
+      +'<div class="ftext exp c3">'+escapeHtml(txt)+ev+'</div>';
+    const t=el.querySelector('.ftext'),car=el.querySelector('.fcar');
+    el.onclick=()=>toggleText(t,car);agentsEl.appendChild(el);});
+  markExpandable(agentsEl);
+  finishVerdict(a);
+}
+async function restoreInvestigation(mmsi){
+  let done=false;
+  try{const r=await fetch(`${BACKEND}/agent/result/${mmsi}`,{cache:'no-store'});if(r.ok){const j=await r.json();
+    if(String(curMmsi)!==String(mmsi))return false;
+    if(j.status==='done'&&j.findings){LAST_INVEST_TS=j.finished_at||null;renderFindings(j.findings,j.assessment||{});renderTimeline(mmsi);done=true;}}
+  }catch(e){}
+  if(!done){dossierWidth(false);renderTimeline(mmsi);}
+  return done;}
 function finishVerdict(a){const conf=Math.round((a.confidence||0)*100);const lv=$('d_level');lv.textContent=a.level||'DONE';lv.style.color=a.level==='HIGH'?'var(--threat)':a.level==='MEDIUM'?'var(--watch)':'var(--safe)';
-  _setConf(a.confidence);if(a.score!=null)d('d_score',a.score);$('launch').textContent='✓ Investigation complete';
-  const v=$('verdict');v.classList.add('show');$('v_story').textContent=a.summary||'';d('v_rec',a.recommended_action||'');curVoice=a.voice_script||a.summary||'';
-  curAudioUrl=a.suspicion_id?`${BACKEND}/voice/audio/${a.suspicion_id}`:'';$('v_voicelbl').textContent='▶ play spoken briefing';if(a.reasoning&&a.reasoning.length)setReasons(a.reasoning);
-  playBriefing(true);}  // auto-narrate the verdict (silently falls back / no-ops if the browser blocks autoplay)
+  _setConf(a.confidence);if(a.score!=null)d('d_score',a.score);const _lb=$('launch');_lb.classList.remove('done');_lb.textContent='↻ Re-investigate';
+  const v=$('verdict');v.classList.add('show');
+  $('v_story').innerHTML='<div class="vhead">'+escapeHtml(a.headline||a.summary||'')+'</div>'
+    +'<div class="fmore" id="v_expand">expand full reasoning ▸</div>'
+    +'<div id="v_detail" class="vbody exp c0">'+assessmentHtml(a,false)+'</div>';
+  const ex=$('v_expand'),det=$('v_detail');
+  if(ex)ex.onclick=()=>{const open=toggleText(det);ex.textContent=open?'collapse reasoning ▾':'expand full reasoning ▸';};
+  d('v_rec',a.recommended_action||'');curVoice=a.voice_script||a.summary||'';
+  curAudioUrl=a.suspicion_id?`${BACKEND}/voice/audio/${a.suspicion_id}`:'';$('v_voicelbl').textContent='▶ play spoken briefing';
+  if(a.reasoning&&a.reasoning.length)setReasons(a.reasoning);
+  playBriefing(true);}  // auto-narrate the verdict via ElevenLabs (silently falls back if autoplay blocked)
 function simSwarm(){agentsEl.innerHTML='';SIM_AGENTS.forEach((a,i)=>{const el=document.createElement('div');el.className='agent';el.id='ag'+i;el.innerHTML=`<div class="ah"><span class="an">${a.n}</span><span class="ac" style="visibility:hidden">${a.c}</span></div><div class="af"><span class="sp">● querying source…</span></div>`;agentsEl.appendChild(el);});let total=0;
   SIM_AGENTS.forEach((a,i)=>setTimeout(()=>{const el=$('ag'+i);el.classList.add('live');setTimeout(()=>{el.classList.remove('live');el.classList.add('done');el.querySelector('.ac').style.visibility='visible';el.querySelector('.af').textContent=a.f;total+=parseInt(a.c.replace('+',''));d('d_score',total);$('d_fill').style.width=total+'%';if(i===SIM_AGENTS.length-1){const lv=$('d_level');lv.textContent='HIGH';lv.style.color='var(--threat)';_setConf(0.86);$('launch').textContent='✓ Investigation complete (demo)';const v=$('verdict');v.classList.add('show');$('v_story').textContent='A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS is untrustworthy. It went dark after leaving Ust-Luga. Score 90/100, confidence 0.86.';d('v_rec','Escalate to coast guard and notify the cable operator. Task an independent sensor to verify.');curVoice='High risk alert. Suspicious vessel movement detected near Estlink 2. Recommend human escalation and independent verification.';$('v_voicelbl').textContent='▶ play spoken briefing';}},700);},i*900));}
 $('launch').onclick=()=>runInvestigation(curMmsi);
@@ -317,57 +466,175 @@ async function playBriefing(auto){
 $('voice').onclick=()=>playBriefing(false);
 renderFeed();openDz();selEagle();
 
-// --- Sentinel: autonomous-monitor panel (self-contained) ------------------
+// --- shared helpers -------------------------------------------------------
+function wbadge(l){const c=l==='HIGH'?'var(--threat)':l==='MEDIUM'?'var(--watch)':'var(--safe)';return '<span style="color:'+c+';font-weight:700">'+(l||'—')+'</span>';}
+function shortTs(s){if(!s)return '';try{const d=new Date(s);if(!isNaN(d))return d.toISOString().slice(5,16).replace('T',' ');}catch(e){}return String(s).slice(0,16).replace('T',' ');}
+function goToBoat(mmsi){const f=VES.features.find(x=>String(x.properties.mmsi)===String(mmsi));if(f){openDz();fly(f.properties.__lon,f.properties.__lat,8.6);selGen(f.properties);}}
+async function runOne(mmsi){
+  sentLiveLabel(mmsi,'checking…');
+  try{await fetch(BACKEND+'/sentinel/run/'+mmsi,{method:'POST'});const t0=Date.now();
+    const poll=setInterval(async()=>{
+      let j={};try{j=await(await fetch(BACKEND+'/sentinel/status',{cache:'no-store'})).json();}catch(e){}
+      try{const a=((await(await fetch(BACKEND+'/mcp/activity',{cache:'no-store'})).json()).activity)||[];
+        const last=a[a.length-1];if(last&&last.tool)sentLiveLabel(mmsi,last.tool);}catch(e){}
+      if(j&&!j.running){clearInterval(poll);sentLiveLabel(mmsi,null);if(window._wlLoad)window._wlLoad();
+        goToBoat(mmsi);}  // Sentinel done → open this boat's dossier (it refreshes the timeline)
+      else if(Date.now()-t0>300000){clearInterval(poll);sentLiveLabel(mmsi,null);}
+    },3000);
+  }catch(e){sentLiveLabel(mmsi,null);}}
+
+// --- unified dossier timeline: investigation verdict + Sentinel deltas -----
+async function renderTimeline(mmsi){
+  const tl=$('d_timeline'),st=$('d_status');if(!tl)return;
+  let mem=[],wl=null;
+  try{mem=((await(await fetch(BACKEND+'/sentinel/memory/'+mmsi,{cache:'no-store'})).json()).memory)||[];}catch(e){}
+  try{const all=((await(await fetch(BACKEND+'/watchlist',{cache:'no-store'})).json()).watchlist)||[];wl=all.find(w=>String(w.mmsi)===String(mmsi))||null;}catch(e){}
+  if(String(curMmsi)!==String(mmsi))return;  // user switched vessels mid-fetch
+  const onWatch=!!wl,on=wl&&wl.status==='active';
+  // Honest check count: only the Sentinel's own cycle records (sentinel_memory) count
+  // as checks. The investigation that created the watch record is NOT a Sentinel check.
+  const nChecks=(mem||[]).length;
+  if(st){
+    if(onWatch||LAST_INVEST_TS){
+      st.style.display='flex';
+      const state=!onWatch?'Investigated · not on watchlist':(on?'Sentinel monitoring active':'On watchlist · paused');
+      const chk=nChecks?' · '+nChecks+' Sentinel check'+(nChecks===1?'':'s'):(onWatch?' · not yet checked':'');
+      const checkTs=nChecks?shortTs(mem[0].ts):'—',invTs=LAST_INVEST_TS?shortTs(LAST_INVEST_TS):'—';
+      st.innerHTML='<span class="dotb'+(on?'':' off')+'"></span><div style="display:flex;flex-direction:column;gap:1px;min-width:0">'
+        +'<span>'+state+chk+'</span><span style="font-size:9.5px;color:var(--faint);font-family:var(--mono)">last check '+checkTs+' · investigated '+invTs+'</span></div>';
+    }else st.style.display='none';
+  }
+  const items=[];
+  (mem||[]).forEach(m=>{const ic=m.event_type==='escalate'?'🚨':m.event_type==='reinvestigate'?'🔁':'👁';
+    items.push({ic:ic,h:m.headline||m.event_type||'monitor',d:m.cycle_note||'',t:m.ts});});
+  // NB: the investigation verdict is NOT added here — the Watch-officer assessment
+  // panel below already shows it; this section is purely the Sentinel's monitoring deltas.
+  const tll=$('d_tl_label');if(tll)tll.style.display=(onWatch||LAST_INVEST_TS||items.length)?'':'none';
+  tl.innerHTML='';
+  if(!items.length){
+    if(onWatch)tl.innerHTML='<div style="color:var(--faint);font-size:11px;padding:2px 0 4px">'
+      +(on?'Awaiting the first Sentinel cycle — no checks recorded yet.':'Paused — activate to let the Sentinel monitor this vessel.')+'</div>';
+    return;
+  }
+  const makeRow=it=>{const row=document.createElement('div');row.className='tlrow tlsent';row.style.cursor='pointer';
+    row.innerHTML='<span class="tlic">'+it.ic+'</span><div class="tlc"><div class="tlh"><span class="tltag">Sentinel</span>'+escapeHtml(it.h)+'</div>'
+      +'<div class="tld exp c3">'+escapeHtml(it.d||'(no detail)')+'</div>'+(it.t?'<div class="tlt">'+escapeHtml(shortTs(it.t))+'</div>':'')+'</div><span class="fcar">▸</span>';
+    const t=row.querySelector('.tld'),car=row.querySelector('.fcar');row.onclick=()=>toggleText(t,car);return row;};
+  items.slice(0,2).forEach(it=>tl.appendChild(makeRow(it)));
+  const rest=items.slice(2);
+  if(rest.length){const more=document.createElement('div');more.id='tl_more';more.className='xdetail';
+    const moreIn=document.createElement('div');moreIn.className='xin';more.appendChild(moreIn);
+    rest.forEach(it=>moreIn.appendChild(makeRow(it)));tl.appendChild(more);
+    const tog=document.createElement('div');tog.className='fmore';tog.style.padding='8px 0 0';tog.textContent='show all ('+items.length+') ▾';
+    tog.onclick=()=>{const open=more.classList.toggle('open');tog.textContent=open?'show less ▴':'show all ('+items.length+') ▾';if(open)markExpandable(moreIn);};tl.appendChild(tog);}
+  markExpandable(tl);
+}
+
+// --- Sentinel: tall scrollable watchlist + autonomous monitor --------------
 (function(){
   const wrap=document.createElement('div');wrap.id='sentinel';
-  wrap.style.cssText='position:fixed;left:16px;bottom:16px;width:350px;max-height:48vh;overflow:auto;'
-   +'background:rgba(10,16,24,.95);border:1px solid #1d2a3a;border-radius:12px;padding:12px 14px;'
-   +'font:12px/1.45 system-ui,sans-serif;color:#cfe;z-index:9999;box-shadow:0 10px 34px rgba(0,0,0,.55)';
-  wrap.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
-   +'<b style="font-size:13px">🛰 Sentinel — autonomous monitor</b>'
-   +'<button id="snt_run" style="background:#0b6;border:0;color:#021;font-weight:700;border-radius:6px;'
-   +'padding:4px 9px;cursor:pointer">Run now</button></div>'
-   +'<div id="snt_status" style="color:#8ab;margin-bottom:6px">idle</div><div id="snt_list">loading…</div>'
-   +'<div style="margin-top:8px;border-top:1px solid #1a2636;padding-top:6px"><b style="color:#7cf">Aiven MCP calls</b>'
-   +'<div id="snt_mcp" style="color:#789;margin-top:3px">—</div></div>';
+  wrap.style.cssText='position:fixed;left:16px;bottom:16px;width:360px;max-height:74vh;display:flex;flex-direction:column;'
+   +'background:linear-gradient(180deg,rgba(30,10,12,.97),rgba(11,8,12,.97));border:1px solid rgba(244,84,61,.55);border-radius:10px;'
+   +'font:12px/1.45 system-ui,sans-serif;color:#e8d2cf;z-index:9;'
+   +'box-shadow:0 0 0 1px rgba(244,84,61,.12),0 0 38px rgba(244,84,61,.22),0 14px 44px rgba(0,0,0,.62)';
+  wrap.innerHTML=
+     '<div id="snt_hdr" style="display:flex;align-items:center;gap:12px;padding:14px 15px;cursor:pointer;border-bottom:1px solid rgba(244,84,61,.28)">'
+   +'<div style="width:42px;height:46px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--threat);background:rgba(244,84,61,.1);border:1px solid rgba(244,84,61,.5);border-radius:7px;box-shadow:inset 0 0 14px rgba(244,84,61,.28),0 0 10px rgba(244,84,61,.22)">✸</div>'
+   +'<div style="flex:1;min-width:0">'
+   +'<div style="font-size:22px;font-weight:800;letter-spacing:.07em;color:var(--threat);line-height:1;text-shadow:0 0 18px rgba(244,84,61,.55)">SENTINEL</div>'
+   +'<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;color:#a98;text-transform:uppercase;margin-top:6px">Autonomous monitoring system <span id="snt_badge" style="color:#ff9685"></span></div></div>'
+   +'<span style="display:flex;align-items:stretch;white-space:nowrap">'
+   +'<button id="snt_run" style="background:rgba(244,84,61,.18);border:1px solid rgba(244,84,61,.6);color:#ff9685;font-weight:700;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;font-size:12px;border-radius:6px 0 0 6px;padding:9px 13px;cursor:pointer">Run all</button>'
+   +'<span id="snt_tog" style="display:flex;align-items:center;justify-content:center;width:28px;border:1px solid rgba(244,84,61,.6);border-left:0;border-radius:0 6px 6px 0;color:#ff9685">▾</span></span></div>'
+   +'<div id="snt_body" style="display:flex;flex-direction:column;min-height:0;flex:1">'
+   +'<div id="snt_status" style="color:var(--threat);padding:9px 15px;border-bottom:1px solid rgba(244,84,61,.18);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase">● idle</div>'
+   +'<div id="snt_list" style="overflow:auto;flex:1;min-height:60px;padding:6px 14px">loading…</div>'
+   +'<div style="border-top:1px solid rgba(244,84,61,.18);padding:8px 14px">'
+   +'<b style="color:var(--threat);font-size:9px;letter-spacing:.12em;text-transform:uppercase">∿ Aiven MCP calls</b>'
+   +'<div id="snt_mcp" style="color:#a98;margin-top:4px;max-height:78px;overflow:auto;font-family:var(--mono);font-size:10px">—</div></div></div>';
   document.body.appendChild(wrap);
   const g=id=>document.getElementById(id);
-  const badge=l=>{const c=l==='HIGH'?'#e55':l==='MEDIUM'?'#fb3':'#5c6';return '<span style="color:'+c+';font-weight:700">'+(l||'—')+'</span>';};
+  let LASTCYCLE='';
+  g('snt_hdr').onclick=e=>{if(e.target.id==='snt_run')return;const b=g('snt_body'),hide=b.style.display!=='none';b.style.display=hide?'none':'flex';g('snt_tog').textContent=hide?'▸':'▾';};
 
   async function load(){
-    try{
-      const r=await fetch(BACKEND+'/watchlist',{cache:'no-store'});const j=await r.json();const wl=(j&&j.watchlist)||[];
-      if(!wl.length){g('snt_list').innerHTML='<i style="color:#789">No vessels on watch yet. Investigate a ship — if the verdict warrants it, it lands here, paused.</i>';return;}
-      g('snt_list').innerHTML=wl.map(w=>{const on=w.status==='active';
-        return '<div style="border-top:1px solid #1a2636;padding:7px 0">'
-         +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
-         +'<span><b>'+(w.name||w.mmsi)+'</b> <span style="color:#789">'+w.mmsi+'</span></span>'
-         +'<button data-mmsi="'+w.mmsi+'" data-act="'+(on?'deactivate':'activate')+'" '
-         +'style="background:'+(on?'#c43':'#0b6')+';border:0;color:#021;font-weight:700;border-radius:6px;padding:3px 9px;cursor:pointer;white-space:nowrap">'
-         +(on?'Deactivate':'Activate')+'</button></div>'
-         +'<div style="color:#9ab;margin-top:3px">'+badge(w.level)+' · conf '+(w.confidence==null?'—':w.confidence)
-         +' · <span style="color:'+(on?'#6d6':'#b96')+'">'+w.status+'</span> · reviews '+(w.reviews||1)+'</div>'
-         +(w.last_note?'<div style="color:#789;margin-top:3px">↳ '+w.last_note+'</div>':'')+'</div>';
-      }).join('');
-      [...g('snt_list').querySelectorAll('button')].forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent='…';
-        await fetch(BACKEND+'/watchlist/'+b.dataset.mmsi+'/'+b.dataset.act,{method:'POST'});load();});
-    }catch(e){g('snt_list').innerHTML='<i style="color:#a55">backend offline</i>';}
+    let wl=[];
+    try{wl=((await(await fetch(BACKEND+'/watchlist',{cache:'no-store'})).json()).watchlist)||[];}
+    catch(e){g('snt_list').innerHTML='<i style="color:var(--threat)">backend offline</i>';return;}
+    const active=wl.filter(w=>w.status==='active').length;
+    g('snt_badge').textContent=wl.length?('· '+wl.length+' watched · '+active+' active'):'';
+    if(!wl.length){g('snt_list').innerHTML='<i style="color:#c2a39e">No vessels on watch yet. Investigate a ship — medium-or-higher verdicts land here and the Sentinel begins monitoring automatically.</i>';return;}
+    wl.sort((a,b)=>String(b.last_reviewed||'').localeCompare(String(a.last_reviewed||'')));
+    g('snt_list').innerHTML=wl.map((w,i)=>{const on=w.status==='active',sig=(w.watch_signals||[]).length,gaps=(w.open_questions||[]).length;
+      return '<div class="wcard" data-mmsi="'+w.mmsi+'" data-i="'+i+'" style="border-top:'+(i?'1px solid var(--line)':'0')+';padding:8px 0;cursor:pointer">'
+       +'<div style="display:flex;justify-content:space-between;gap:8px"><span><b class="sb_name" data-mmsi="'+w.mmsi+'">'+escapeHtml(w.name||w.mmsi)+'</b> <span style="color:var(--faint);font-family:var(--mono);font-size:10px">'+w.mmsi+'</span> <span class="sb_live" data-mmsi="'+w.mmsi+'"></span></span>'+wbadge(w.level)+'</div>'
+       +'<div style="color:#789;font-size:10.5px;margin-top:2px">conf '+(w.confidence==null?'—':w.confidence)+' · <span style="color:'+(on?'var(--safe)':'var(--watch)')+'">'+w.status+'</span> · '+sig+' signals · '+gaps+' gaps · '+(w.reviews||1)+' review'+((w.reviews||1)===1?'':'s')+'</div>'
+       +'<div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap"><button class="sbtn sb_go" style="background:var(--surface2);border:1px solid var(--line2);color:#cfe;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px">📍 Open</button>'
+       +'<button class="sbtn sb_run" style="background:var(--surface2);border:1px solid var(--line2);color:#9f9;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px">▶ Run</button>'
+       +'<button class="sbtn sb_tog" style="background:var(--surface2);border:1px solid var(--line2);color:#fc9;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px">'+(on?'⏸ Pause':'✓ Activate')+'</button>'
+       +'<button class="sbtn sb_del" style="background:var(--surface2);border:1px solid var(--line2);color:#f99;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px">🗑</button></div></div>';
+    }).join('');
+    [...g('snt_list').querySelectorAll('.wcard')].forEach(card=>{const mmsi=card.dataset.mmsi,w=wl[+card.dataset.i],q=s=>card.querySelector(s);
+      card.onclick=e=>{if(e.target.closest('button'))return;goToBoat(mmsi);};
+      q('.sb_go').onclick=e=>{e.stopPropagation();goToBoat(mmsi);};
+      q('.sb_run').onclick=e=>{e.stopPropagation();runOne(mmsi);};
+      q('.sb_tog').onclick=async e=>{e.stopPropagation();await fetch(BACKEND+'/watchlist/'+mmsi+'/'+(w.status==='active'?'deactivate':'activate'),{method:'POST'});load();if(String(curMmsi)===String(mmsi))renderTimeline(mmsi);};
+      q('.sb_del').onclick=async e=>{e.stopPropagation();if(!confirm('Remove '+(w.name||mmsi)+' from the watchlist?'))return;await fetch(BACKEND+'/watchlist/'+mmsi+'/delete',{method:'POST'});load();if(String(curMmsi)===String(mmsi))renderTimeline(mmsi);};
+    });
+    sentReapply();  // keep live "● doing…" labels on cards that re-rendered mid-run
   }
-  async function runNow(){g('snt_status').textContent='● running a monitoring cycle…';
+  window._wlLoad=load;
+  async function runAll(){g('snt_status').innerHTML='● running a monitoring cycle…';
     try{await fetch(BACKEND+'/sentinel/run',{method:'POST'});const t0=Date.now();
       const poll=setInterval(async()=>{let j={};try{j=await(await fetch(BACKEND+'/sentinel/status',{cache:'no-store'})).json();}catch(e){}
         load();
-        if(j&&!j.running){clearInterval(poll);const s=(j.last&&(j.last.summary||j.last.error))||'done';g('snt_status').textContent='✓ '+s;}
+        if(j&&!j.running){clearInterval(poll);LASTCYCLE=(j.last&&(j.last.summary||j.last.error))||'done';
+          g('snt_status').innerHTML='✓ cycle complete · <span id="snt_clog" style="color:var(--cyan);cursor:pointer">view log ▸</span>';
+          const cl=g('snt_clog');if(cl)cl.onclick=()=>openLog('<h3>Last Sentinel cycle</h3><p>'+escapeHtml(LASTCYCLE)+'</p>');
+          if(curMmsi)renderTimeline(curMmsi);}
         else if(Date.now()-t0>300000){clearInterval(poll);g('snt_status').textContent='timeout';}},3000);
     }catch(e){g('snt_status').textContent='backend offline';}
   }
   async function loadMcp(){
-    try{const r=await fetch(BACKEND+'/mcp/activity',{cache:'no-store'});const j=await r.json();const a=(j&&j.activity)||[];
+    try{const a=((await(await fetch(BACKEND+'/mcp/activity',{cache:'no-store'})).json()).activity)||[];
       g('snt_mcp').innerHTML=a.length?a.slice(-8).reverse().map(x=>
         '<div>'+(x.ok===false?'✗':'✓')+' <b style="color:#9df">'+(x.tool||'?')+'</b> <span style="color:#678">'+(x.agent||'')+'</span></div>'
       ).join(''):'<i>no MCP calls yet</i>';
     }catch(e){}
   }
-  g('snt_run').onclick=runNow;load();loadMcp();setInterval(()=>{load();loadMcp();},6000);
+  g('snt_run').onclick=runAll;load();loadMcp();setInterval(()=>{load();loadMcp();},6000);
 })();
+
+// --- left-edge dossier resize: min/max width, no overlap with fixed panels ---
+const RSZ_OBSTACLES=['.tl','.layerbox','#sentinel'];
+function _relRect(el,base){const r=el.getBoundingClientRect(),b=base.getBoundingClientRect();return{l:r.left-b.left,t:r.top-b.top,r:r.right-b.left,b:r.bottom-b.top};}
+function makeResizable(el,opt){
+  if(!el||el._rsz)return;el._rsz=1;opt=opt||{};
+  (opt.dirs||['n','s','e','w','nw','ne','sw','se']).forEach(dir=>{const h=document.createElement('div');h.className='rsz rsz-'+dir;h.addEventListener('mousedown',ev=>_startRsz(ev,el,dir,opt));el.appendChild(h);});
+}
+function _startRsz(e,el,dir,opt){
+  e.preventDefault();e.stopPropagation();
+  const minW=opt.minW||260,minH=opt.minH||150,maxW=opt.maxW||1e5,maxH=opt.maxH||1e5;
+  const mw=el.offsetParent||document.querySelector('.mapwrap')||document.body;const pw=mw.clientWidth,ph=mw.clientHeight;
+  const sx=e.clientX,sy=e.clientY;const L=el.offsetLeft,T=el.offsetTop,W=el.offsetWidth,H=el.offsetHeight;
+  el.style.left=L+'px';el.style.top=T+'px';el.style.width=W+'px';el.style.height=H+'px';el.style.right='auto';el.style.bottom='auto';el.style.maxWidth='none';el.style.maxHeight='none';
+  const obs=RSZ_OBSTACLES.map(s=>document.querySelector(s)).filter(o=>o&&o!==el&&o.offsetParent!==null).map(o=>_relRect(o,mw));
+  const hit=(a,o)=>a.l<o.r-0.5&&a.r>o.l+0.5&&a.t<o.b-0.5&&a.b>o.t+0.5;
+  function mm(ev){let dx=ev.clientX-sx,dy=ev.clientY-sy,nl=L,nt=T,nw=W,nh=H;
+    if(dir.includes('e'))nw=W+dx;if(dir.includes('s'))nh=H+dy;
+    if(dir.includes('w')){nw=W-dx;nl=L+dx;}if(dir.includes('n')){nh=H-dy;nt=T+dy;}
+    if(nw<minW){if(dir.includes('w'))nl=L+W-minW;nw=minW;}
+    if(nw>maxW){if(dir.includes('w'))nl=L+W-maxW;nw=maxW;}
+    if(nh<minH){if(dir.includes('n'))nt=T+H-minH;nh=minH;}
+    if(nh>maxH){if(dir.includes('n'))nt=T+H-maxH;nh=maxH;}
+    if(nl<0){nw+=nl;nl=0;}if(nt<0){nh+=nt;nt=0;}
+    if(nl+nw>pw)nw=pw-nl;if(nt+nh>ph)nh=ph-nt;
+    const a={l:nl,t:nt,r:nl+nw,b:nt+nh};
+    if(obs.some(o=>hit(a,o)))return;  // block: don't let it overlap a fixed/other panel
+    el.style.left=nl+'px';el.style.top=nt+'px';el.style.width=nw+'px';el.style.height=nh+'px';
+  }
+  function mu(){document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);}
+  document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
+}
+makeResizable($('dz'),{dirs:['w'],minW:300,maxW:680});
 </script></body></html>

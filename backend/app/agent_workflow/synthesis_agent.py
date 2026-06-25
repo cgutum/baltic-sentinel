@@ -25,7 +25,9 @@ _SYSTEM = (
     "GPS/cable context unavailable) and SAY SO in the summary. Do not assert anything the "
     "findings don't support. recommended_action scales with level (LOW: monitor/log; MEDIUM: "
     "analyst review; HIGH: escalate to a human watch officer + notify the cable operator) and "
-    "must NEVER be automatic enforcement — a human decides. voice_script: 1-3 spoken sentences."
+    "must NEVER be automatic enforcement — a human decides. voice_script: 1-3 spoken sentences. "
+    "headline: ONE punchy line, max 12 words, no period — the verdict at a glance "
+    "(e.g. 'Shadow-fleet tanker loitering over Estlink 2, GPS untrustworthy')."
 )
 
 _SUBMIT = {
@@ -34,11 +36,12 @@ _SUBMIT = {
     "input_schema": {"type": "object", "properties": {
         "level": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]},
         "confidence": {"type": "number", "description": "0 to 1"},
+        "headline": {"type": "string", "description": "max 12 words, no period — verdict at a glance"},
         "summary": {"type": "string"},
         "reasoning": {"type": "array", "items": {"type": "string"}},
         "recommended_action": {"type": "string"},
         "voice_script": {"type": "string"}},
-        "required": ["level", "confidence", "summary", "reasoning",
+        "required": ["level", "confidence", "headline", "summary", "reasoning",
                      "recommended_action", "voice_script"]},
 }
 
@@ -58,6 +61,7 @@ def run(case: dict, findings: list[dict]) -> dict:
                                    submit_tool=_SUBMIT, max_steps=2, model="claude-opus-4-8")
     if not out:
         return {"suspicion_id": sid, "level": "LOW", "confidence": 0.0,
+                "headline": "Assessment unavailable — manual review required",
                 "summary": "Assessment unavailable — the Watch Officer synthesis could not be completed.",
                 "reasoning": ["Synthesis step failed or no model access."],
                 "recommended_action": "Manual analyst review required.",
@@ -70,6 +74,7 @@ def run(case: dict, findings: list[dict]) -> dict:
     except (TypeError, ValueError):
         conf = 0.5
     return {"suspicion_id": sid, "level": level, "confidence": round(conf, 2),
+            "headline": str(out.get("headline", "")).strip(),
             "summary": str(out.get("summary", "")),
             "reasoning": [str(r) for r in out.get("reasoning", [])],
             "recommended_action": str(out.get("recommended_action", "")),

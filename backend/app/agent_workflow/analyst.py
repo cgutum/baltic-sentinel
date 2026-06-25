@@ -30,7 +30,9 @@ _SYSTEM = (
     "nearest-cable distance (say plainly if it is NOT near a cable), and any meaningful "
     "clustering of nearby vessels.\n\n"
     "Rules: never assert what the evidence does not support; when something is unavailable, "
-    "say so and lower the severity. Tag each finding with its dimension in the text. "
+    "say so and lower the severity. BEGIN each finding's text with its dimension as a square-"
+    "bracket tag and nothing before it — exactly '[IDENTITY & RECORDS] ', '[MARITIME BEHAVIOUR] ', "
+    "or '[INFRASTRUCTURE ENVIRONMENT] ' — so each reads as a distinct analyst. "
     "Submit 3-6 findings total (severity 0-1)."
 )
 

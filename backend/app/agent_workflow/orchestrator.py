@@ -24,7 +24,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 from ..models import AgentFinding
-from . import analyst, evidence_librarian, osint_researcher, synthesis_agent, tools
+from . import agent_base, analyst, evidence_librarian, osint_researcher, synthesis_agent, tools
 
 # Hard wall-clock cap (s) for the parallel batch. The Aiven MCP connector / web
 # search can occasionally stall; past this we proceed with whatever completed, so
@@ -118,16 +118,20 @@ def _build_watch(suspicion: dict, raw: dict, case: dict, assessment: dict,
             "imo": suspicion.get("imo"), "suspicion_id": suspicion.get("suspicion_id"),
             "level": assessment.get("level"), "confidence": assessment.get("confidence"),
             "watch_signals": signals[:12], "open_questions": open_q[:12],
-            "recheck_triggers": triggers, "status": "paused"}  # operator activates the Sentinel
+            "recheck_triggers": triggers, "status": "active"}  # MEDIUM+ go straight onto active watch
 
 
 def run_once(suspicion: dict) -> dict:
     sid = suspicion.get("suspicion_id")
-    print(f"[conductor] investigating {suspicion.get('name')} ({suspicion.get('mmsi')})")
+    mmsi = suspicion.get("mmsi")
+    print(f"[conductor] investigating {suspicion.get('name')} ({mmsi})")
+    agent_base.progress_reset(mmsi)
+    agent_base.progress(mmsi, "Pulling live evidence from Aiven — track, sanctions, GPS, cable…")
 
     raw = _gather_raw(suspicion)
     print(f"[conductor] raw: track={len(raw['track'])}pts nearby={len(raw['nearby'])} "
           f"sanctions_listed={raw['sanctions'].get('listed')} gps={raw['gps'].get('available')}")
+    agent_base.progress(mmsi, "Running the Analyst, Aiven Librarian and OSINT researcher in parallel…")
 
     # ONE parallel batch: the Analyst judges the raw evidence while the Librarian
     # (Aiven SQL + MCP) and OSINT (web) gather in parallel. OSINT's questions are
@@ -151,6 +155,7 @@ def run_once(suspicion: dict) -> dict:
             try:
                 results[key] = fut.result(timeout=remaining)
                 print(f"[conductor] <- {key}: {_result_summary(key, results[key])}")
+                agent_base.progress(mmsi, f"{key} — {_result_summary(key, results[key])}")
             except FuturesTimeoutError:
                 print(f"[conductor] <- {key}: SKIPPED (exceeded {_PARALLEL_BUDGET_SEC}s budget)")
                 results[key] = None
@@ -172,25 +177,28 @@ def run_once(suspicion: dict) -> dict:
     case = {"suspicion": suspicion, "raw": raw,
             "librarian": results.get("Aiven Evidence Librarian"),
             "osint": results.get("OSINT Researcher") or {"findings": [], "unresolved": []}}
+    agent_base.progress(mmsi, "Watch Officer weighing the evidence into a calibrated verdict…")
     assessment = synthesis_agent.run(case, findings)
     print(f"[conductor] verdict {assessment['level']} (confidence={assessment['confidence']})")
+    agent_base.progress(mmsi, f"Verdict: {assessment['level']} (confidence {assessment['confidence']})")
     # Always hand ElevenLabs a non-empty script so every investigation gets real audio.
     script = (assessment.get("voice_script") or assessment.get("summary") or "").strip()
     voice = tools.create_voice_briefing(script, sid)
     tools.save_assessment(assessment, voice_path=voice["voice_path"])
     briefing = tools.render_briefing(raw.get("vessel", {}), assessment, findings)
 
-    # Hand off to the Sentinel — but ONLY if the verdict warrants ongoing monitoring
-    # (the agent's call). Benign LOW verdicts are not added. It lands 'paused' so the
-    # operator explicitly activates the Sentinel on it.
+    # Hand off to the Sentinel — but ONLY if the verdict warrants ongoing monitoring.
+    # Benign LOW verdicts are not added. MEDIUM+ land 'active' so the Sentinel starts
+    # monitoring them right away (the operator can still pause it per-vessel).
     if assessment["level"] in ("MEDIUM", "HIGH"):
         watch = _build_watch(suspicion, raw, case, assessment, findings)
         tools.record_watch(watch)
-        print(f"[conductor] added to watchlist (paused) for {watch['mmsi']} "
-              f"({len(watch['watch_signals'])} signals) — operator can activate the Sentinel on it")
+        print(f"[conductor] added to watchlist (active) for {watch['mmsi']} "
+              f"({len(watch['watch_signals'])} signals) — Sentinel will monitor it")
     else:
         print(f"[conductor] verdict {assessment['level']} — benign, not added to watchlist")
 
+    agent_base.progress(mmsi, "Done.")
     print("[conductor] done")
     return {"suspicion": suspicion, "evidence": raw, "librarian": case["librarian"],
             "osint": case["osint"], "findings": findings,

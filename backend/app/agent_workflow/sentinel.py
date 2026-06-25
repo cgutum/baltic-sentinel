@@ -53,17 +53,19 @@ _SYSTEM = (
     "reinvestigations and escalations per cycle; spend them only where warranted. Base every "
     "decision on tool results, never assume, and never take destructive action.\n\n"
     "YOUR LONG-TERM MEMORY lives in Aiven and you manage it YOURSELF through the MCP Postgres "
-    "tools (aiven_pg_write / aiven_pg_read), NOT through update_watch. It is the table "
-    "sentinel_memory(id serial, ts timestamptz default now(), mmsi text, cycle_note text). "
-    "Each cycle: (a) ensure it exists — aiven_pg_write a 'CREATE TABLE IF NOT EXISTS "
+    "tools (aiven_pg_write / aiven_pg_read). It is the table sentinel_memory(id serial primary "
+    "key, ts timestamptz default now(), mmsi text, event_type text, headline text, cycle_note "
+    "text). Each cycle: (a) ensure it exists — aiven_pg_write 'CREATE TABLE IF NOT EXISTS "
     "sentinel_memory (id serial primary key, ts timestamptz default now(), mmsi text, "
-    "cycle_note text)'; (b) optionally recall a vessel's history — aiven_pg_read 'SELECT "
-    "cycle_note, ts FROM sentinel_memory WHERE mmsi=... ORDER BY ts DESC LIMIT 3'; (c) after "
-    "you decide on a vessel, persist a one-line observation — aiven_pg_write 'INSERT INTO "
-    "sentinel_memory (mmsi, cycle_note) VALUES (...)'. aiven_pg_write blocks DROP/TRUNCATE — "
-    "you never need them. The project / service_name / database for these MCP tools are given "
-    "in the cycle message. (update_watch remains the operator-facing status; sentinel_memory "
-    "is your own running log.)\n\n"
+    "event_type text, headline text, cycle_note text)'; (b) optionally recall history — "
+    "aiven_pg_read 'SELECT headline, ts FROM sentinel_memory WHERE mmsi=... ORDER BY ts DESC "
+    "LIMIT 3'; (c) after deciding on a vessel, log ONE row — aiven_pg_write 'INSERT INTO "
+    "sentinel_memory (mmsi, event_type, headline, cycle_note) VALUES (...)' where event_type is "
+    "exactly 'monitor', 'reinvestigate' or 'escalate', headline is a punchy one-liner (e.g. "
+    "'No material change — score stable at 30'), and cycle_note is 1-3 sentences of detail. "
+    "Keep it a DELTA — what changed and what you decided — NOT a re-summary of the verdict (the "
+    "Watch Officer owns the verdict). aiven_pg_write blocks DROP/TRUNCATE. The project / "
+    "service_name / database are in the cycle message.\n\n"
     "When you have handled the vessels, call submit_cycle."
 )
 
@@ -150,8 +152,10 @@ def _reinvestigate(mmsi: str) -> dict:
     v = database.get_vessel(mmsi)
     if not v:
         return {"error": "unknown vessel — no live data"}
-    from ..api.routes import _suspicion_from_vessel  # reuse the production builder
+    from ..api.routes import _suspicion_from_vessel, cache_investigation  # reuse + refresh dossier
     res = orchestrator.run_once(_suspicion_from_vessel(mmsi, v))
+    cache_investigation(mmsi, res, {"mmsi": mmsi, "name": v.get("name"),
+                                    "flag": v.get("flag"), "score": v.get("suspicion_score")})
     a = res.get("assessment", {})
     return {"mmsi": mmsi, "level": a.get("level"), "confidence": a.get("confidence"),
             "summary": (a.get("summary") or "")[:300]}
@@ -176,13 +180,20 @@ def _mcp_servers():
     return None
 
 
-def run_cycle() -> dict | None:
-    """One autonomous monitoring pass over the watchlist."""
-    watchlist = tools.get_watchlist(limit=20)
+def run_cycle(only_mmsi: str | None = None) -> dict | None:
+    """One autonomous monitoring pass. If only_mmsi is given, review just that vessel
+    (any status — operator-triggered per-boat run); otherwise the ACTIVE watchlist."""
+    if only_mmsi:
+        watchlist = [w for w in tools.get_watchlist(status=None, limit=200)
+                     if str(w.get("mmsi")) == str(only_mmsi)]
+    else:
+        watchlist = tools.get_watchlist(limit=20)
     if not watchlist:
-        print("[sentinel] watchlist empty — nothing to monitor yet", flush=True)
+        print(f"[sentinel] {'vessel ' + only_mmsi + ' not on watchlist' if only_mmsi else 'watchlist empty'}"
+              " — nothing to monitor", flush=True)
         return None
-    print(f"[sentinel] cycle start — {len(watchlist)} vessel(s) on watch", flush=True)
+    print(f"[sentinel] cycle start — {len(watchlist)} vessel(s)"
+          + (f" (manual: {only_mmsi})" if only_mmsi else " on watch"), flush=True)
 
     budget = {"reinvestigate": _REINVESTIGATE_BUDGET, "escalate": _ESCALATE_BUDGET}
 

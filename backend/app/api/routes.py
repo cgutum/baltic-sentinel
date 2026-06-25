@@ -150,19 +150,26 @@ _jobs: dict[str, dict] = {}
 _jobs_lock = threading.Lock()
 
 
+def cache_investigation(mmsi: str, result: dict, vessel: dict | None = None) -> dict:
+    """Cache a finished investigation so GET /agent/result/{mmsi} returns it. Called by
+    both the operator-triggered run AND the Sentinel's re-investigation, so the dossier
+    always shows the freshest verdict whoever produced it."""
+    payload = {"mmsi": str(mmsi), "vessel": vessel or {"mmsi": str(mmsi)},
+               "findings": result.get("findings"), "assessment": result.get("assessment"),
+               "osint": result.get("osint"), "briefing": result.get("briefing"),
+               "evidence": result.get("evidence")}
+    with _jobs_lock:
+        _jobs[str(mmsi)] = {"status": "done", "result": payload, "ts": time.time()}
+    _last_result.clear()
+    _last_result.update(payload)
+    return payload
+
+
 def _run_investigation(mmsi: str, suspicion: dict, vessel: dict) -> None:
     """Background worker: run the agent team, stash the result for polling."""
     from app.agent_workflow import orchestrator
     try:
-        result = orchestrator.run_once(suspicion)
-        payload = {"mmsi": mmsi, "vessel": vessel,
-                   "findings": result["findings"], "assessment": result["assessment"],
-                   "osint": result.get("osint"), "briefing": result.get("briefing"),
-                   "evidence": result.get("evidence")}
-        with _jobs_lock:
-            _jobs[mmsi] = {"status": "done", "result": payload, "ts": time.time()}
-        _last_result.clear()
-        _last_result.update(payload)
+        cache_investigation(mmsi, orchestrator.run_once(suspicion), vessel)
     except Exception as e:  # noqa: BLE001 — surface failure via the poll endpoint
         with _jobs_lock:
             _jobs[mmsi] = {"status": "error", "error": str(e), "ts": time.time()}
@@ -231,11 +238,17 @@ def agent_result(mmsi: str):
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "status": "none"})
     if job["status"] == "running":
-        return {"ok": True, "status": "running", "mmsi": mmsi}
+        from app.agent_workflow.agent_base import PROGRESS
+        return {"ok": True, "status": "running", "mmsi": mmsi,
+                "progress": PROGRESS.get(str(mmsi), [])}
     if job["status"] == "error":
         return JSONResponse(status_code=500, content={
             "ok": False, "status": "error", "error": job.get("error")})
-    return {"ok": True, "status": "done", **job["result"]}
+    finished_at = None
+    if job.get("ts"):
+        finished_at = datetime.datetime.fromtimestamp(
+            job["ts"], datetime.timezone.utc).isoformat()
+    return {"ok": True, "status": "done", "finished_at": finished_at, **job["result"]}
 
 
 # --- Sentinel (autonomous monitor) + watchlist control --------------------------
@@ -243,10 +256,10 @@ _sentinel_state: dict = {"running": False, "last": None}
 _sentinel_lock = threading.Lock()
 
 
-def _run_sentinel_cycle() -> None:
+def _run_sentinel_cycle(only_mmsi: str | None = None) -> None:
     from app.agent_workflow import sentinel
     try:
-        out = sentinel.run_cycle()
+        out = sentinel.run_cycle(only_mmsi=only_mmsi)
         with _sentinel_lock:
             _sentinel_state.update(running=False,
                                    last=out or {"summary": "watchlist had no active vessels"})
@@ -279,6 +292,14 @@ def watch_deactivate(mmsi: str):
     return tools.set_watch_status(mmsi, "paused")
 
 
+@router.post("/watchlist/{mmsi}/delete")
+def watch_delete(mmsi: str):
+    """Operator removes a vessel from the watchlist."""
+    from app.agent_workflow import tools
+    print(f"[sentinel-api] operator DELETED {mmsi} from watchlist", flush=True)
+    return tools.delete_watch(mmsi)
+
+
 @router.post("/sentinel/run")
 def sentinel_run():
     """Trigger one Sentinel monitoring cycle now (over the ACTIVE watchlist)."""
@@ -289,6 +310,25 @@ def sentinel_run():
     print("[sentinel-api] monitoring cycle triggered by operator", flush=True)
     threading.Thread(target=_run_sentinel_cycle, daemon=True).start()
     return {"ok": True, "status": "running"}
+
+
+@router.post("/sentinel/run/{mmsi}")
+def sentinel_run_one(mmsi: str):
+    """Run the Sentinel on a single vessel now (operator per-boat trigger)."""
+    with _sentinel_lock:
+        if _sentinel_state["running"]:
+            return {"ok": True, "status": "running"}
+        _sentinel_state["running"] = True
+    print(f"[sentinel-api] monitoring cycle triggered for {mmsi}", flush=True)
+    threading.Thread(target=_run_sentinel_cycle, kwargs={"only_mmsi": mmsi}, daemon=True).start()
+    return {"ok": True, "status": "running", "mmsi": mmsi}
+
+
+@router.get("/sentinel/memory/{mmsi}")
+def sentinel_memory(mmsi: str):
+    """The Sentinel's own memory (cycle notes) for a vessel — written via the MCP."""
+    from app.agent_workflow import tools
+    return {"ok": True, "memory": tools.get_sentinel_memory(mmsi)}
 
 
 @router.get("/sentinel/status")
