@@ -48,9 +48,13 @@ def replay_eagle_s():
 
 @router.get("/vessels")
 def vessels():
-    """All known vessels for the map (regular boats + candidates, with score)."""
+    """All known vessels for the map (regular boats + candidates, with score).
+
+    active_only hides stale low-score ghosts so the live map shows only currently-active
+    ships plus any flagged threat (e.g. a vessel that just went dark).
+    """
     from app import database
-    return {"vessels": database.get_vessels()}
+    return {"vessels": database.get_vessels(active_only=True)}
 
 
 @router.get("/candidates")

@@ -166,8 +166,25 @@ def _read_vessels(where: str = "", params: tuple = (), limit: int = 500) -> list
         return cur.fetchall()
 
 
-def get_vessels(limit: int = 500) -> list[dict]:
-    """All known vessels (map source). Includes score so the UI can color them."""
+# Live-map filter (get_vessels(active_only=True)): show vessels seen within this window,
+# plus any flagged vessel (candidate or score >= threshold) regardless of staleness so a
+# vessel that just went dark still shows. Hides stale low-score "ghosts" from the MAP only;
+# the row stays in the DB and the sweep still re-scores every vessel (active_only=False).
+MAP_FRESH_WINDOW = "1 hour"
+MAP_KEEP_SCORE = 25
+
+
+def get_vessels(limit: int = 500, active_only: bool = False) -> list[dict]:
+    """All known vessels (map source). Includes score so the UI can color them.
+
+    active_only filters out stale low-score ghost vessels for the live map (see the
+    MAP_* constants above). The sweep calls this WITHOUT active_only so it re-scores
+    the full table, ghosts included.
+    """
+    if active_only:
+        where = (f"WHERE last_seen > now() - interval '{MAP_FRESH_WINDOW}' "
+                 f"OR is_candidate = true OR suspicion_score >= {MAP_KEEP_SCORE}")
+        return _read_vessels(where, limit=limit)
     return _read_vessels(limit=limit)
 
 
