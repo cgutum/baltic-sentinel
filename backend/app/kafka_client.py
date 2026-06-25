@@ -12,6 +12,7 @@ print-only stub so the app still boots locally.
 """
 
 import json
+import os
 from pathlib import Path
 
 from app.config import settings
@@ -56,8 +57,29 @@ def _ca_path() -> str:
 
 
 def _conf_base() -> dict:
+    """Kafka client config with two auth modes.
+
+    - SSL/mTLS when the Aiven Application integration injects cert env vars
+      (KAFKA_ACCESS_CERT / KAFKA_ACCESS_KEY [/ KAFKA_CA_CERT]). The values may be
+      raw PEM contents or file paths — we detect and handle both.
+    - SASL_SSL / SCRAM-SHA-256 otherwise (local dev + the current live service).
+    """
+    bootstrap = (os.getenv("KAFKA_SERVICE_URI") or os.getenv("KAFKA_BOOTSTRAP_SERVERS")
+                 or settings.aiven_kafka_bootstrap)
+    cert, key = os.getenv("KAFKA_ACCESS_CERT"), os.getenv("KAFKA_ACCESS_KEY")
+    if cert and key:
+        conf = {"bootstrap.servers": bootstrap, "security.protocol": "SSL"}
+        # confluent-kafka takes either an inline PEM (*.pem) or a file path (*.location).
+        for val, pem_key, loc_key in (
+            (cert, "ssl.certificate.pem", "ssl.certificate.location"),
+            (key, "ssl.key.pem", "ssl.key.location"),
+            (os.getenv("KAFKA_CA_CERT"), "ssl.ca.pem", "ssl.ca.location"),
+        ):
+            if val:
+                conf[loc_key if os.path.exists(val) else pem_key] = val
+        return conf
     return {
-        "bootstrap.servers": settings.aiven_kafka_bootstrap,
+        "bootstrap.servers": bootstrap,
         "security.protocol": "SASL_SSL",
         "sasl.mechanisms": "SCRAM-SHA-256",
         "sasl.username": settings.aiven_kafka_username,

@@ -1,0 +1,204 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Baltic Sentinel — Dossier options</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060A12;--panel:#0C121E;--panel2:#0A0F1A;--line:#1B2740;--text:#D7DEEA;--muted:#8595AD;--faint:#56657F;--cyan:#4CC9E6;--threat:#F4543D;--watch:#F2B441;--safe:#3FB68B;--mono:'Geist Mono',monospace;--sans:'Geist',system-ui,sans-serif;--serif:'Instrument Serif',serif;--news:'Newsreader',Georgia,serif}
+*{box-sizing:border-box}
+body{margin:0;background:#04070D;color:var(--text);font-family:var(--sans);padding:26px 22px 60px}
+.head{max-width:1240px;margin:0 auto 22px}
+.head h1{font-size:18px;font-weight:600;letter-spacing:.04em;margin:0 0 4px}
+.head p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.row{display:flex;gap:20px;max-width:1240px;margin:0 auto;align-items:flex-start;flex-wrap:wrap}
+.col{flex:1 1 360px;min-width:340px;max-width:392px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--faint);margin:0 0 8px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.tag b{color:var(--cyan);font-weight:500}
+.tag.aa b{color:var(--watch)}.tag.bb b{color:var(--safe)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.scrl{max-height:80vh;overflow:auto}
+.scrl::-webkit-scrollbar{width:7px}.scrl::-webkit-scrollbar-thumb{background:#1f2c44;border-radius:4px}
+
+/* ============ shared dossier head ============ */
+.dh{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.dh .x{color:var(--faint)}
+
+/* ============ G — current (Gotham instrument) ============ */
+.g{padding:15px 16px 20px}
+.g .sec{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin:18px 0 9px;padding-top:13px;border-top:1px solid var(--line)}
+.g .sec:first-child{margin-top:2px;padding-top:0;border-top:0}
+.g .nm{font-size:21px;font-weight:700;letter-spacing:-.01em}
+.g .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:4px}
+.g .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;margin-top:11px;font-size:12.5px}
+.g .kv .k{color:var(--faint);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;align-self:center}
+.g .kv .v{font-weight:500}
+.g .strow{display:flex;align-items:center;justify-content:space-between}
+.g .lvl{font-family:var(--mono);font-size:11px;border:1px solid var(--threat);color:var(--threat);padding:3px 9px;border-radius:3px;letter-spacing:.1em}
+.g .sc{font-family:var(--mono);font-size:24px;font-weight:500}.g .sc s{color:var(--faint);text-decoration:none;font-size:14px}
+.g .meter{display:flex;gap:2px;margin-top:10px}
+.g .meter i{height:7px;flex:1;background:#162133}.g .meter i.on{background:var(--threat)}
+.g ul{list-style:none;margin:0;padding:0}
+.g ul li{font-size:12.5px;color:#C3CEE0;padding:5px 0 5px 15px;position:relative;line-height:1.4}
+.g ul li:before{content:'▸';position:absolute;left:0;color:var(--threat)}
+.g .btn{display:block;width:100%;margin:14px 0 2px;background:#11192a;border:1px solid var(--threat);border-left:3px solid var(--threat);color:var(--text);font-family:var(--mono);font-size:12px;letter-spacing:.1em;padding:11px;text-align:center;cursor:pointer}
+.g .ag{border:1px solid var(--line);border-radius:5px;padding:9px 11px;margin-top:8px;background:var(--panel2)}
+.g .ag .at{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--cyan)}.g .ag .at b{color:var(--safe);font-weight:500}
+.g .ag .af{font-size:12px;color:#B9C5D8;margin-top:5px;line-height:1.42}
+.g .story{font-family:var(--serif);font-style:italic;font-size:16.5px;line-height:1.5;color:#fff;margin-top:4px}
+.g .rec{margin-top:11px;font-size:12.5px;color:#C3CEE0;line-height:1.45}.g .rec b{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase;margin-bottom:3px}
+.g .voice{display:flex;align-items:center;gap:9px;margin-top:13px;border:1px solid var(--line);border-radius:6px;padding:8px 11px;color:var(--muted);font-family:var(--mono);font-size:10px}
+.g .voice .pl{width:22px;height:22px;border-radius:50%;background:var(--cyan);color:#02121a;display:flex;align-items:center;justify-content:center;font-size:9px}
+
+/* ============ A — Intelligence brief (report) ============ */
+.a{padding:0}
+.a .masthd{padding:14px 18px 12px;border-bottom:1px solid var(--line)}
+.a .ref{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--faint);display:flex;justify-content:space-between;text-transform:uppercase}
+.a h2{font-family:var(--news);font-weight:600;font-size:27px;line-height:1.05;margin:11px 0 5px;letter-spacing:-.01em}
+.a .ptc{font-size:12px;color:var(--muted);font-family:var(--mono);letter-spacing:.02em}
+.a .band{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
+.a .band .lv{background:var(--threat);color:#1a0703;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.a .band .cf{padding:10px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;flex-direction:column;justify-content:center}
+.a .band .cf b{color:var(--text);font-size:15px;font-weight:600}
+.a .body{padding:16px 18px 20px}
+.a .hd{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--watch);text-transform:uppercase;margin:20px 0 9px;display:flex;align-items:center;gap:9px}
+.a .hd:first-child{margin-top:0}
+.a .hd:after{content:'';flex:1;height:1px;background:var(--line)}
+.a .partic{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
+.a .partic div{font-size:13px;border-bottom:1px dotted #20304c;padding-bottom:6px}
+.a .partic span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;margin-bottom:2px}
+.a ol{margin:0;padding:0;counter-reset:ind;list-style:none}
+.a ol li{counter-increment:ind;position:relative;padding:9px 54px 9px 28px;border-bottom:1px solid #131e30;font-size:13px;line-height:1.4}
+.a ol li:before{content:counter(ind);position:absolute;left:0;top:9px;font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.a ol li b{display:block;font-weight:600;margin-bottom:1px}
+.a ol li i{font-style:normal;color:var(--muted);font-size:12px}
+.a ol li .pt{position:absolute;right:0;top:10px;font-family:var(--mono);font-size:12px;color:var(--watch)}
+.a .assess{font-family:var(--news);font-size:15.5px;line-height:1.62;color:#E7EDF6}
+.a .rec{margin-top:13px;padding:12px 14px;background:var(--panel2);border-left:2px solid var(--watch);font-size:13px;line-height:1.5;color:#D2DCEC}
+.a .rec b{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--watch);text-transform:uppercase;margin-bottom:4px}
+.a .sign{margin-top:12px;font-family:var(--news);font-style:italic;font-size:13px;color:var(--muted)}
+.a .actions{display:flex;gap:9px;margin-top:16px;align-items:center}
+.a .launch{flex:1;background:var(--threat);border:0;color:#1a0703;font-weight:700;font-size:12.5px;letter-spacing:.04em;padding:11px;border-radius:5px;cursor:pointer}
+.a .play{font-family:var(--mono);font-size:10.5px;color:var(--cyan);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+
+/* ============ B — Signal card (minimal) ============ */
+.b{padding:20px 19px 22px}
+.b .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.b h2{font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+.b .meta{font-size:11.5px;color:var(--faint);margin-top:5px;line-height:1.5}
+.b .flag{font-size:22px;line-height:1}
+.b .gauge{display:flex;align-items:center;gap:16px;margin:20px 0 6px}
+.b .gauge svg{flex:none}
+.b .gv{display:flex;flex-direction:column}
+.b .gv .n{font-size:34px;font-weight:700;line-height:1;letter-spacing:-.02em}
+.b .gv .n s{color:var(--faint);text-decoration:none;font-size:16px;font-weight:500}
+.b .gv .l{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--threat);margin-top:5px}
+.b .gv .c{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.b .ind{margin-top:14px}
+.b .ind .r{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #131e30;font-size:13px}
+.b .ind .r:last-child{border-bottom:1px solid #131e30}
+.b .ind .r .dot{width:6px;height:6px;border-radius:50%;background:var(--threat);flex:none}
+.b .ind .r .t{flex:1;color:#CAD4E6}
+.b .ind .r .w{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.b .verdict{font-size:16px;font-weight:600;line-height:1.45;margin:18px 0 0;letter-spacing:-.01em}
+.b .do{display:inline-flex;align-items:center;gap:8px;margin-top:13px;padding:9px 13px;border-radius:6px;background:rgba(244,84,61,.1);border:1px solid rgba(244,84,61,.35);font-size:12.5px;color:#F7A99A;line-height:1.4}
+.b .do b{color:var(--threat);font-weight:600}
+.b .foot{display:flex;gap:10px;margin-top:18px;align-items:center}
+.b .launch{flex:1;background:transparent;border:1px solid var(--threat);color:var(--threat);font-weight:600;font-size:12.5px;padding:11px;border-radius:7px;cursor:pointer;letter-spacing:.02em}
+.b .play{font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer}
+.b .play .pl{width:24px;height:24px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--cyan)}
+.note{max-width:1240px;margin:18px auto 0;color:var(--faint);font-size:12px;font-family:var(--mono);line-height:1.6}
+</style></head><body>
+<div class="head">
+  <h1>Baltic Sentinel · Dossier — two redesign options</h1>
+  <p>Same vessel (Eagle S, post-investigation), three treatments. Left is what's live now. Pick A, B, mix, or tell me what to change.</p>
+</div>
+<div class="row">
+
+  <!-- ===================== CURRENT ===================== -->
+  <div class="col">
+    <div class="tag">Current · <b>Gotham instrument</b></div>
+    <div class="panel"><div class="dh">DOSSIER <span class="x">✕</span></div>
+    <div class="scrl"><div class="g">
+      <div class="sec">// Identity</div>
+      <div class="nm">Eagle S</div><div class="sub">IMO 9329760 · MMSI 518998000 · Tanker</div>
+      <div class="kv"><div class="k">FLAG</div><div class="v">🇨🇰 Cook Islands</div><div class="k">SPEED</div><div class="v">1.6 kn</div><div class="k">NEAR</div><div class="v">Estlink 2 corridor</div><div class="k">ORIGIN</div><div class="v">Ust-Luga · 6d ago</div></div>
+      <div class="sec">// Threat score</div>
+      <div class="strow"><span class="lvl">HIGH</span><span class="sc">90<s>/100</s></span></div>
+      <div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <div class="sec">// Signals</div>
+      <ul><li>Slow (1.6 kn) inside Estlink 2 corridor</li><li>Sanctions/detention record: shadow fleet</li><li>Inside GPS-jamming zone; AIS unreliable here</li><li>Flag of convenience: Cook Islands</li></ul>
+      <button class="btn">✓ INVESTIGATION COMPLETE</button>
+      <div class="sec">// Agent findings</div>
+      <div class="ag"><div class="at"><span>Identity &amp; Flag</span><b>+10</b></div><div class="af">Cook Islands flag of convenience. Profile matches Russian shadow-fleet tanker.</div></div>
+      <div class="ag"><div class="at"><span>Behavior</span><b>+35</b></div><div class="af">Slow drift at 1.6 kn inside the Estlink 2 corridor. Inconsistent with normal transit.</div></div>
+      <div class="ag"><div class="at"><span>Sanctions &amp; Record</span><b>+30</b></div><div class="af">OpenSanctions hit: shadow fleet + person of interest.</div></div>
+      <div class="ag"><div class="at"><span>GPS Environment</span><b>+15</b></div><div class="af">Inside an active GPS-jamming zone. AIS position cannot be trusted here.</div></div>
+      <div class="sec">// Watch-officer assessment</div>
+      <div class="story">"A Cook Islands-flagged shadow-fleet tanker drifting at 1.6 kn over Estlink 2, inside a GPS-jamming zone where its AIS is untrustworthy. It went dark after Ust-Luga."</div>
+      <div class="rec"><b>Recommended action</b>Escalate to coast guard and notify the cable operator. Task an independent sensor to verify.</div>
+      <div class="voice"><span class="pl">▶</span> play spoken briefing</div>
+    </div></div></div>
+  </div>
+
+  <!-- ===================== OPTION A ===================== -->
+  <div class="col">
+    <div class="tag aa">Option A · <b>Intelligence brief</b></div>
+    <div class="panel"><div class="dh">CASE FILE <span class="x">✕</span></div>
+    <div class="scrl"><div class="a">
+      <div class="masthd">
+        <div class="ref"><span>Baltic Sentinel · Field report</span><span>REF BS-2026-0418</span></div>
+        <h2>Eagle&nbsp;S</h2>
+        <div class="ptc">Tanker · IMO 9329760 · MMSI 518998000</div>
+      </div>
+      <div class="band"><div class="lv">⚠ HIGH THREAT</div><div class="cf">CONFIDENCE<b>0.86</b></div></div>
+      <div class="body">
+        <div class="hd">Vessel particulars</div>
+        <div class="partic">
+          <div><span>Flag</span>🇨🇰 Cook Islands</div>
+          <div><span>Speed</span>1.6 kn</div>
+          <div><span>Nearest asset</span>Estlink 2</div>
+          <div><span>Origin</span>Ust-Luga · 6d ago</div>
+        </div>
+        <div class="hd">Indicators · 4 agents</div>
+        <ol>
+          <li><b>Slow transit in cable corridor</b><i>1.6 kn directly over Estlink 2</i><span class="pt">+35</span></li>
+          <li><b>Sanctions / detention record</b><i>OpenSanctions: shadow fleet + POI</i><span class="pt">+30</span></li>
+          <li><b>Degraded GPS environment</b><i>Active jamming zone; AIS unreliable</i><span class="pt">+15</span></li>
+          <li><b>Flag of convenience</b><i>Cook Islands registry</i><span class="pt">+10</span></li>
+        </ol>
+        <div class="hd">Assessment</div>
+        <div class="assess">Eagle S is a Cook Islands-flagged tanker matching the Russian shadow-fleet profile. It is drifting at 1.6 knots directly over the Estlink 2 power link, inside a GPS-jamming zone where its broadcast position cannot be trusted. The vessel went dark shortly after departing Ust-Luga six days ago. Pattern and location are consistent with deliberate loitering over critical seabed infrastructure.</div>
+        <div class="rec"><b>Recommended action</b>Escalate to the Finnish / Estonian coast guard and notify the cable operator (Fingrid / Elering). Task an independent sensor to confirm before any intervention.</div>
+        <div class="sign">— Watch Officer, Gulf of Finland Watch</div>
+        <div class="actions"><button class="launch">▶ Launch investigation</button><span class="play">▶ play briefing</span></div>
+      </div>
+    </div></div></div>
+  </div>
+
+  <!-- ===================== OPTION B ===================== -->
+  <div class="col">
+    <div class="tag bb">Option B · <b>Signal card</b></div>
+    <div class="panel"><div class="dh">VESSEL <span class="x">✕</span></div>
+    <div class="scrl"><div class="b">
+      <div class="top"><div><h2>Eagle S</h2><div class="meta">Tanker · IMO 9329760<br>MMSI 518998000 · 1.6 kn</div></div><div class="flag">🇨🇰</div></div>
+      <div class="gauge">
+        <svg width="104" height="104" viewBox="0 0 104 104">
+          <circle cx="52" cy="52" r="46" fill="none" stroke="#162133" stroke-width="8"/>
+          <circle cx="52" cy="52" r="46" fill="none" stroke="#F4543D" stroke-width="8" stroke-linecap="round" stroke-dasharray="260.1 28.9" transform="rotate(-90 52 52)"/>
+        </svg>
+        <div class="gv"><div class="n">90<s>/100</s></div><div class="l">HIGH THREAT</div><div class="c">conf 0.86</div></div>
+      </div>
+      <div class="ind">
+        <div class="r"><span class="dot"></span><span class="t">Slow drift over Estlink 2</span><span class="w">+35</span></div>
+        <div class="r"><span class="dot"></span><span class="t">Sanctioned · shadow fleet</span><span class="w">+30</span></div>
+        <div class="r"><span class="dot"></span><span class="t">Inside GPS-jamming zone</span><span class="w">+15</span></div>
+        <div class="r"><span class="dot"></span><span class="t">Flag of convenience</span><span class="w">+10</span></div>
+      </div>
+      <div class="verdict">A shadow-fleet tanker loitering over a live power cable, in a zone where its own signal can't be trusted.</div>
+      <div class="do"><b>DO</b> Escalate to coast guard · notify cable operator · verify with an independent sensor.</div>
+      <div class="foot"><button class="launch">▶ Launch investigation</button><span class="play"><span class="pl">▶</span> briefing</span></div>
+    </div></div></div>
+  </div>
+
+</div>
+<div class="note">// A reads like a human-written naval report (serif narrative, numbered indicators, classification band). B is stripped to the essentials (ring gauge, four signals, one-line verdict). Both keep every field the current panel has.</div>
+</body></html>

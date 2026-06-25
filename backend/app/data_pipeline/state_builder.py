@@ -105,6 +105,7 @@ def _sweep_loop() -> None:
 
 def run() -> None:
     print("[state_builder] consuming ais.raw ...")
+    database.init_tables()  # ensure vessels/tracks tables + indexes exist before writing
     threading.Thread(target=_sweep_loop, daemon=True).start()
     for msg in consume(TOPIC_AIS_RAW, group_id="state_builder"):
         try:

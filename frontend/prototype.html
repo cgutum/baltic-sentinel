@@ -110,10 +110,9 @@
         <div class="lr on" data-ids="ves"><span class="k3"><i class="t"></i><i class="t" style="border-bottom-color:var(--watch)"></i><i class="t" style="border-bottom-color:var(--threat)"></i></span>Vessels<span class="sub">risk</span></div>
         <div class="lr" data-ids="ves-lab"><span class="sw" style="border:1px dashed var(--muted)"></span>Vessel labels</div>
         <div class="lr on" data-ids="jam-f"><span class="sw" style="background:var(--jam)"></span>GPS interference<span class="sub">daily</span></div>
-        <div class="lr on" data-ids="cab-rg,cab-r"><span class="sw" style="background:var(--watch);height:3px"></span>At-risk cable<span class="sub">Estlink 2</span></div>
+        <div class="lr on" data-ids="cab-rg,cab-r,tA,tGap,tB,rr0,rr1,rr2" data-eagle="1"><span class="sw" style="background:var(--watch);height:3px"></span>Eagle S incident<span class="sub">cable + track</span></div>
         <div class="lr on" data-ids="cab-pow"><span class="sw" style="background:#7F8CA3;height:2px"></span>Power cables</div>
         <div class="lr on" data-ids="cab-tel"><span class="sw" style="background:#5E6B85;height:2px"></span>Telecom cables</div>
-        <div class="lr on" data-ids="rr0,rr1,rr2"><span class="sw" style="background:var(--cyan);height:2px"></span>Range rings</div>
       </div>
     </div>
     <div class="readout" id="ro">59.900 N · 026.250 E</div>
@@ -141,11 +140,22 @@ const RC={safe:"#3FB68B",watch:"#F2B441",threat:"#F4543D"};
 const EAGLE={name:"Eagle S",mmsi:"518998000",lon:26.25,lat:59.95};
 const TRACK_A=[[28.38,59.67],[27.8,59.74],[27.2,59.82]],TRACK_GAP=[[27.2,59.82],[26.8,59.88],[26.5,59.92]],TRACK_B=[[26.5,59.92],[26.35,59.94],[26.25,59.95]];
 const EAGLE_TRACK=TRACK_A.concat(TRACK_GAP.slice(1),TRACK_B.slice(1));
-const PORTS=[["Helsinki",24.95,60.15],["Tallinn",24.75,59.44],["Kotka",26.95,60.47],["Hamina",27.18,60.55],["Hanko",22.97,59.82],["Paldiski",24.05,59.35],["Sillamäe",27.74,59.42],["Ust-Luga",28.38,59.67],["Sköldvik/Porvoo",25.55,60.30],["Muuga",24.95,59.50],["Vuosaari",25.19,60.21],["Inkoo",24.0,60.04],["Primorsk",28.61,60.34]];
+const PORTS=[["Helsinki",24.95,60.15],["Tallinn",24.75,59.44],["Kotka",26.95,60.47],["Hamina",27.18,60.55],["Hanko",22.97,59.82],["Paldiski",24.05,59.35],["Sillamäe",27.74,59.42],["Ust-Luga",28.38,59.67],["Sköldvik/Porvoo",25.55,60.30],["Muuga",24.95,59.50],["Vuosaari",25.19,60.21],["Inkoo",24.0,60.04],["Primorsk",28.61,60.34],["Vysotsk/Vyborg",28.6,60.62],["St Petersburg",29.7,59.93]];
 const SIM_AGENTS=[{n:"Identity & Flag",c:"+10",f:"Cook Islands flag of convenience. Profile matches Russian shadow-fleet tanker."},{n:"Behavior",c:"+35",f:"Slow drift at 1.6 kn inside the Estlink 2 corridor. Inconsistent with normal transit."},{n:"Sanctions & Record",c:"+30",f:"OpenSanctions hit: mare.shadow;poi (shadow fleet + person of interest)."},{n:"GPS Environment",c:"+15",f:"Inside an active GPS-jamming zone. AIS position cannot be trusted here."}];
-function ensure(fc){(fc.features||[]).forEach(f=>{f.properties.__lon=f.geometry.coordinates[0];f.properties.__lat=f.geometry.coordinates[1];});return fc;}
+function inPort(lon,lat){return PORTS.some(p=>{const dx=(lon-p[1])*111.32*Math.cos(lat*Math.PI/180),dy=(lat-p[2])*110.574;return Math.hypot(dx,dy)<=7;});}
+function ensure(fc){(fc.features||[]).forEach(f=>{const c=f.geometry.coordinates;f.properties.__lon=c[0];f.properties.__lat=c[1];if(f.properties.risk&&f.properties.risk!=='safe'&&inPort(c[0],c[1])){f.properties.risk='safe';f.properties.__inport=true;}});return fc;}
 ensure(D.vessels);
 let VES=D.vessels, liveOk=false, curMmsi=EAGLE.mmsi, curVoice="", autoDone=false, selMarker=null;
+const EAGLE_ELS=[];
+// Gulf of Finland navigable centreline (lon,lat), W->E. Synthetic trails follow it so
+// projected routes stay in water (never cross land) and read like real gulf transits.
+const CL=[[22.7,59.52],[23.6,59.66],[24.6,59.82],[25.6,59.93],[26.6,60.0],[27.6,60.03],[28.5,60.0],[29.3,59.9],[29.85,59.86]];
+const _km2=(a,b)=>{const dx=(b[0]-a[0])*111.32*Math.cos((a[1]+b[1])/2*Math.PI/180),dy=(b[1]-a[1])*110.574;return Math.hypot(dx,dy);};
+const CLD=[0];for(let i=0;i<CL.length-1;i++)CLD.push(CLD[i]+_km2(CL[i],CL[i+1]));const CLLEN=CLD[CLD.length-1];
+function clAt(s){s=Math.max(0,Math.min(CLLEN,s));for(let i=0;i<CL.length-1;i++){if(s<=CLD[i+1]||i===CL.length-2){const t=(s-CLD[i])/((CLD[i+1]-CLD[i])||1);return[CL[i][0]+(CL[i+1][0]-CL[i][0])*t,CL[i][1]+(CL[i+1][1]-CL[i][1])*t];}}return CL[CL.length-1];}
+function clTan(s){s=Math.max(0,Math.min(CLLEN,s));for(let i=0;i<CL.length-1;i++){if(s<=CLD[i+1]||i===CL.length-2){const a=CL[i],b=CL[i+1],cs=Math.cos(a[1]*Math.PI/180);let tx=(b[0]-a[0])*111.32*cs,ty=(b[1]-a[1])*110.574;const L=Math.hypot(tx,ty)||1;return[tx/L,ty/L];}}return[1,0];}
+function projCL(lon,lat){let bd=1e9,bs=0,bf=[lon,lat];for(let i=0;i<CL.length-1;i++){const a=CL[i],b=CL[i+1],cs=Math.cos(a[1]*Math.PI/180),vx=(b[0]-a[0])*111.32*cs,vy=(b[1]-a[1])*110.574,wx=(lon-a[0])*111.32*cs,wy=(lat-a[1])*110.574,vv=vx*vx+vy*vy;let t=vv?(wx*vx+wy*vy)/vv:0;t=Math.max(0,Math.min(1,t));const f=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],dd=_km2([lon,lat],f);if(dd<bd){bd=dd;bs=CLD[i]+(CLD[i+1]-CLD[i])*t;bf=f;}}return{d:bd,s:bs,foot:bf};}
+function trailAlong(lon,lat,course,speed,len){const pr=projCL(lon,lat);if(pr.d>55)return backTrack(lon,lat,course,speed);const off=[lon-pr.foot[0],lat-pr.foot[1]];const cr=(course||0)*Math.PI/180,tn=clTan(pr.s),dot=Math.sin(cr)*tn[0]+Math.cos(cr)*tn[1],back=dot>=0?-1:1;const total=len||Math.max(60,Math.min(150,(speed||9)*1.852*12)),step=8,N=Math.max(2,Math.round(total/step)),pts=[];for(let k=N;k>=0;k--){const p=clAt(pr.s+back*step*k);pts.push([p[0]+off[0],p[1]+off[1]]);}return pts;}
 const $=id=>document.getElementById(id),d=(id,v)=>$(id).textContent=v;
 function tier(r){const s=r.suspicion_score||0;return (r.is_candidate||s>=50)?'threat':(s>=25?'watch':'safe');}
 function rowsToFC(rows){return ensure({type:'FeatureCollection',features:(rows||[]).filter(r=>r.last_lat!=null&&r.last_lon!=null).map(r=>({type:'Feature',properties:{name:r.name||r.mmsi,mmsi:r.mmsi,imo:r.imo,shiptype:r.ship_type,flag:r.flag,risk:tier(r),score:Math.round(r.suspicion_score||0),course:r.last_course||0,speed:r.last_speed,reasons:r.suspicion_reasons||[]},geometry:{type:'Point',coordinates:[r.last_lon,r.last_lat]}}))});}
@@ -167,14 +177,14 @@ function circle(lon,lat,km){const p=[],dLat=km/110.574,dLon=km/(111.32*Math.cos(
 // nearest cable (point -> polyline), for the at-risk highlight
 function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy;let t=l2?((px-ax)*dx+(py-ay)*dy)/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));}
 function nearestCable(lon,lat){let best=null,bd=1e9;(D.cables.features||[]).forEach(f=>{const g=f.geometry;const lines=g.type==='MultiLineString'?g.coordinates:[g.coordinates];lines.forEach(ln=>{for(let i=0;i<ln.length-1;i++){const dd=distSeg(lon,lat,ln[i][0],ln[i][1],ln[i+1][0],ln[i+1][1]);if(dd<bd){bd=dd;best=f;}}});});return{feature:best,dist:bd};}
-async function loadVessels(){try{const r=await fetch(`${BACKEND}/vessels`,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();const fc=rowsToFC(j.vessels||[]);if(fc.features.length){VES=fc;liveOk=true;const s=map.getSource('ves');if(s)s.setData(VES);renderFeed();autoOpen();}}catch(e){liveOk=false;renderFeed();autoOpen();}}
+async function loadVessels(){try{const r=await fetch(`${BACKEND}/vessels`,{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();const fc=rowsToFC(j.vessels||[]);if(fc.features.length){VES=fc;liveOk=true;const s=map.getSource('ves');if(s)s.setData(VES);const sv=VES.features.find(f=>String(f.properties.mmsi)===String(curMmsi));if(sv)showSelection(sv.properties.__lon,sv.properties.__lat);renderFeed();autoOpen();}}catch(e){liveOk=false;renderFeed();autoOpen();}}
 function autoOpen(){if(autoDone)return;autoDone=true;const top=VES.features.filter(f=>f.properties.risk==='threat').sort((a,b)=>b.properties.score-a.properties.score)[0];if(top){openDz();fly(top.properties.__lon,top.properties.__lat,8.4);selGen(top.properties);}}
 map.on('load',()=>{
   try{map.setProjection({type:'globe'});}catch(e){}
   map.addSource('jam',{type:'geojson',data:D.jamming});map.addLayer({id:'jam-f',type:'fill',source:'jam',paint:{'fill-color':'#6B7FD7','fill-opacity':0.09}});
   map.addSource('cab',{type:'geojson',data:D.cables});
   map.addLayer({id:'cab-tel',type:'line',source:'cab',filter:['==',['get','kind'],'telecom'],paint:{'line-color':'#5E6B85','line-width':1,'line-opacity':0.4}});
-  map.addLayer({id:'cab-pow',type:'line',source:'cab',filter:['all',['==',['get','kind'],'power'],['!=',['get','risk'],true]],paint:{'line-color':'#7F8CA3','line-width':1.6,'line-opacity':0.6,'line-dasharray':[2,2]}});
+  map.addLayer({id:'cab-pow',type:'line',source:'cab',filter:['all',['==',['get','kind'],'power'],['!=',['get','risk'],true]],paint:{'line-color':'#8593AB','line-width':1.8,'line-opacity':0.78}});
   map.addLayer({id:'cab-rg',type:'line',source:'cab',filter:['==',['get','risk'],true],paint:{'line-color':'#F2B441','line-width':10,'line-opacity':0.16,'line-blur':4}});
   map.addLayer({id:'cab-r',type:'line',source:'cab',filter:['==',['get','risk'],true],paint:{'line-color':'#F2B441','line-width':2.6,'line-opacity':0.95}});
   // at-risk cable highlight (set on vessel select)
@@ -183,7 +193,8 @@ map.on('load',()=>{
   map.addLayer({id:'sel-cable',type:'line',source:'sel-cable',paint:{'line-color':'#F4543D','line-width':3,'line-opacity':0.95}});
   // selected vessel historical route
   map.addSource('sel-track',{type:'geojson',data:EMPTY});
-  map.addLayer({id:'sel-track',type:'line',source:'sel-track',paint:{'line-color':'#4CC9E6','line-width':2.4,'line-opacity':0.9}});
+  map.addLayer({id:'sel-track',type:'line',source:'sel-track',paint:{'line-color':'#4CC9E6','line-width':2.2,'line-opacity':0.85,'line-dasharray':[1.6,1.8]}});
+  map.addSource('sel-pt',{type:'geojson',data:EMPTY});
   // eagle scripted track (solid/gap/solid)
   const aL=(id,co,p)=>{map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:co}}});map.addLayer({id:id,type:'line',source:id,paint:p});};
   aL('tA',TRACK_A,{'line-color':'#F4543D','line-width':2,'line-opacity':0.7});aL('tGap',TRACK_GAP,{'line-color':'#8595AD','line-width':2,'line-dasharray':[1.5,2],'line-opacity':0.85});aL('tB',TRACK_B,{'line-color':'#F4543D','line-width':2.4,'line-opacity':0.95});
@@ -192,7 +203,9 @@ map.on('load',()=>{
   map.addSource('ves',{type:'geojson',data:VES});
   map.addLayer({id:'ves',type:'symbol',source:'ves',layout:{'icon-image':['match',['get','risk'],'safe','tri-safe','watch','tri-watch','threat','tri-threat','tri-safe'],'icon-rotate':['get','course'],'icon-rotation-alignment':'map','icon-size':0.55,'icon-allow-overlap':true}});
   map.addLayer({id:'ves-lab',type:'symbol',source:'ves',filter:['!=',['get','risk'],'safe'],layout:{'visibility':'none','text-field':['get','name'],'text-font':['Open Sans Regular','Arial Unicode MS Regular'],'text-size':10,'text-offset':[0,1.1],'text-anchor':'top'},paint:{'text-color':'#CDD8EA','text-halo-color':'#070C16','text-halo-width':1.3}});
-  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?(typeof p.reasons==='string'?JSON.parse(p.reasons):p.reasons):[];p.__lon=e.lngLat.lng;p.__lat=e.lngLat.lat;openDz();selGen(p);});
+  (function(){const s=48,c=document.createElement('canvas');c.width=s;c.height=s;const x=c.getContext('2d');x.strokeStyle='#4CC9E6';x.lineWidth=2.2;const L=12;[[5,5,1,1],[s-5,5,-1,1],[5,s-5,1,-1],[s-5,s-5,-1,-1]].forEach(a=>{const cx=a[0],cy=a[1],sx=a[2],sy=a[3];x.beginPath();x.moveTo(cx,cy+sy*L);x.lineTo(cx,cy);x.lineTo(cx+sx*L,cy);x.stroke();});map.addImage('sel-brackets',x.getImageData(0,0,s,s));})();
+  map.addLayer({id:'sel-box',type:'symbol',source:'sel-pt',layout:{'icon-image':'sel-brackets','icon-size':0.9,'icon-allow-overlap':true,'icon-ignore-placement':true}});
+  map.on('click','ves',e=>{const p=Object.assign({},e.features[0].properties);p.reasons=p.reasons?(typeof p.reasons==='string'?JSON.parse(p.reasons):p.reasons):[];const g=e.features[0].geometry.coordinates;p.__lon=g[0];p.__lat=g[1];openDz();selGen(p);});
   map.on('mouseenter','ves',()=>map.getCanvas().style.cursor='pointer');map.on('mouseleave','ves',()=>map.getCanvas().style.cursor='');
   const el=document.createElement('div');el.style.cssText='width:14px;height:14px;background:#F4543D;border:1.5px solid #fff;box-shadow:0 0 12px #F4543D;transform:rotate(45deg);animation:hp 1.8s infinite;cursor:pointer';el.onclick=()=>{fly(EAGLE.lon,EAGLE.lat,8.6);openDz();selEagle();};
   new maplibregl.Marker({element:el}).setLngLat([EAGLE.lon,EAGLE.lat]).addTo(map);
@@ -200,22 +213,24 @@ map.on('load',()=>{
   new maplibregl.Marker({element:op,anchor:'left'}).setLngLat([28.38,59.67]).addTo(map);
   const gl=document.createElement('div');gl.style.cssText='font-family:var(--mono);font-size:10px;color:#8595AD;text-shadow:0 1px 3px #000;white-space:nowrap';gl.textContent='⚠ AIS went dark';
   new maplibregl.Marker({element:gl}).setLngLat([26.85,59.86]).addTo(map);
+  EAGLE_ELS.push(el,op,gl);
   renderFeed();loadVessels();setInterval(loadVessels,20000);
 });
 map.on('mousemove',e=>{const ns=e.lngLat.lat>=0?'N':'S',ew=e.lngLat.lng>=0?'E':'W';d('ro',Math.abs(e.lngLat.lat).toFixed(3)+' '+ns+' · '+Math.abs(e.lngLat.lng).toFixed(3).padStart(7,'0')+' '+ew);});
 // selection helpers
-function showSelection(lon,lat){if(selMarker)selMarker.remove();const el=document.createElement('div');el.className='selbox';el.innerHTML='<span class="c1"></span><span class="c2"></span><span class="c3"></span><span class="c4"></span>';selMarker=new maplibregl.Marker({element:el}).setLngLat([lon,lat]).addTo(map);}
+function showSelection(lon,lat){const s=map.getSource('sel-pt');if(s)s.setData({type:'Feature',geometry:{type:'Point',coordinates:[lon,lat]}});}
 function setTrack(coords){const s=map.getSource('sel-track');if(s)s.setData(coords&&coords.length>1?{type:'Feature',geometry:{type:'LineString',coordinates:coords}}:EMPTY);}
 function setCable(geom){const s=map.getSource('sel-cable');if(s)s.setData(geom?{type:'Feature',geometry:geom}:EMPTY);}
 function highlightNear(lon,lat){const nc=nearestCable(lon,lat);setCable(nc.feature&&nc.dist<0.18?nc.feature.geometry:null);}
 function highlightName(n){const f=(D.cables.features||[]).find(x=>x.properties.name===n);setCable(f?f.geometry:null);}
-async function showTrackFor(mmsi){setTrack(null);try{const r=await fetch(`${BACKEND}/track/${mmsi}`,{cache:'no-store'});const j=await r.json();if(j.track&&j.track.length>1)setTrack(j.track);}catch(e){}}
+function backTrack(lon,lat,course,speed){const km=Math.max(50,Math.min(160,(speed||9)*1.852*13)),brg=((course||0)+180)*Math.PI/180,ux=Math.sin(brg),uy=Math.cos(brg),px=Math.cos(brg),py=-Math.sin(brg),N=16,pts=[];for(let i=N;i>=0;i--){const f=i/N,dd=km*f,w=Math.sin(f*Math.PI*1.3)*km*0.045,dx=ux*dd+px*w,dy=uy*dd+py*w,dLat=dy/110.574,dLon=dx/(111.32*Math.cos(lat*Math.PI/180));pts.push([lon+dLon,lat+dLat]);}return pts;}
+async function showTrackFor(p){const mmsi=p.mmsi;setTrack(null);let coords=null;try{const r=await fetch(`${BACKEND}/track/${mmsi}`,{cache:'no-store'});const j=await r.json();if(j.track&&j.track.length>=10)coords=j.track;}catch(e){}if(curMmsi!==mmsi)return;if(!coords)coords=trailAlong(p.__lon,p.__lat,p.course,p.speed);setTrack(coords);}
 // refresh
 $('refresh').onclick=()=>{const b=$('refresh');b.classList.add('spin');loadVessels().finally(()=>setTimeout(()=>b.classList.remove('spin'),600));};
 // layers/legend toggles
 $('lhdr').onclick=()=>$('lbody').classList.toggle('collapsed');
 function setVis(ids,on){ids.forEach(id=>{if(map.getLayer(id))map.setLayoutProperty(id,'visibility',on?'visible':'none');});}
-document.querySelectorAll('.lr').forEach(row=>row.onclick=()=>{const on=row.classList.toggle('on');setVis(row.dataset.ids.split(','),on);});
+document.querySelectorAll('.lr').forEach(row=>row.onclick=()=>{const on=row.classList.toggle('on');setVis(row.dataset.ids.split(','),on);if(row.dataset.eagle)EAGLE_ELS.forEach(e=>{e.style.display=on?'':'none';});});
 // mode toggle
 document.querySelectorAll('#mode button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));b.classList.add('on');const fish=b.dataset.m==='fish';setVis(['cab-tel','cab-pow','cab-rg','cab-r'],!fish);});
 // search (ships + infrastructure + ports)
@@ -234,9 +249,9 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search'))res.classL
 const agentsEl=$('agents');
 function setReasons(l){$('d_reasons').innerHTML=(l||[]).map(r=>`<li>${r}</li>`).join('');}
 function resetVerdict(){$('verdict').classList.remove('show');const b=$('launch');b.style.display='block';b.classList.remove('done');b.textContent='▶ Launch Investigation';}
-function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';showSelection(EAGLE.lon,EAGLE.lat);setTrack(EAGLE_TRACK);highlightName('Estlink 2');}
+function selEagle(){curMmsi=EAGLE.mmsi;d('d_name','Eagle S');d('d_sub','IMO 9329760 · MMSI 518998000 · Tanker');d('d_flag','🇨🇰 Cook Islands');d('d_speed','1.6 kn');d('d_cable','Estlink 2 corridor');d('d_origin','Ust-Luga · 6d ago');d('d_score','0');$('d_fill').style.width='0';const lv=$('d_level');lv.textContent='— READY';lv.style.color='var(--muted)';setReasons([]);resetVerdict();agentsEl.innerHTML='';showSelection(EAGLE.lon,EAGLE.lat);setTrack(null);highlightName('Estlink 2');}
 function selGen(p){curMmsi=p.mmsi;d('d_name',p.name||p.mmsi);d('d_sub',(p.imo?'IMO '+p.imo+' · ':'')+'MMSI '+p.mmsi+(p.shiptype?' · '+p.shiptype:''));d('d_flag',p.flag||'—');d('d_speed',p.speed!=null?p.speed+' kn':'—');d('d_cable','—');d('d_origin','—');const t=p.risk;d('d_score',p.score!=null?p.score:0);$('d_fill').style.width=(p.score||0)+'%';const lv=$('d_level');lv.textContent=t==='threat'?'HIGH':t==='watch'?'WATCH':'NORMAL';lv.style.color=t==='threat'?'var(--threat)':t==='watch'?'var(--watch)':'var(--safe)';setReasons(p.reasons&&p.reasons.length?p.reasons:['No threshold triggers. Normal traffic.']);resetVerdict();const b=$('launch');b.style.display=t==='safe'?'none':'block';agentsEl.innerHTML='<div style="color:var(--muted);font-size:12px;padding:6px 0 12px">'+(t==='safe'?'Below alert threshold.':'Operator can launch an investigation.')+'</div>';
-  showSelection(p.__lon,p.__lat);showTrackFor(p.mmsi);highlightNear(p.__lon,p.__lat);}
+  showSelection(p.__lon,p.__lat);showTrackFor(p);if(p.risk==='threat')highlightNear(p.__lon,p.__lat);else setCable(null);}
 // real investigation (B's agents) with simulated fallback
 async function runInvestigation(mmsi){const b=$('launch');if(b.classList.contains('done'))return;b.classList.add('done');b.textContent='● Investigation running…';const lv=$('d_level');lv.textContent='● INVESTIGATING';lv.style.color='var(--cyan)';
   agentsEl.innerHTML='<div class="agent live" style="opacity:1;transform:none"><div class="ah"><span class="an">Investigator</span></div><div class="af"><span class="sp">● running Claude agents… (may take ~10-30s)</span></div></div>';

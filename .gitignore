@@ -14,3 +14,4 @@ node_modules/
 
 # Cached third-party data (downloaded at boot)
 backend/data/
+.gstack/

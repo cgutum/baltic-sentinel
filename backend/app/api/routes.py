@@ -57,7 +57,7 @@ def track(mmsi: str):
     from psycopg.rows import dict_row
     with database.get_connection() as conn, conn.cursor(row_factory=dict_row) as cur:
         cur.execute("SELECT lon, lat FROM tracks WHERE mmsi=%s AND lon IS NOT NULL "
-                    "ORDER BY ts DESC LIMIT 300", (str(mmsi),))
+                    "ORDER BY ts DESC LIMIT 1000", (str(mmsi),))
         rows = cur.fetchall()
     coords = [[r["lon"], r["lat"]] for r in reversed(rows)]
     return {"mmsi": mmsi, "track": coords}

@@ -24,6 +24,16 @@ app.add_middleware(
 app.include_router(router)
 
 
+@app.on_event("startup")
+def _ensure_schema():
+    """Create tables + indexes if missing (idempotent). Safe no-op without Postgres."""
+    try:
+        from app import database
+        database.init_tables()
+    except Exception as e:  # noqa: BLE001 — schema setup must not block API startup
+        print(f"[startup] init_tables skipped: {e}")
+
+
 @app.get("/health")
 def health():
     """Liveness check. Done-when target for H0-H1."""

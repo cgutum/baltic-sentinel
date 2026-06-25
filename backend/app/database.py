@@ -32,6 +32,7 @@ _SCHEMA = [
         lat double precision, lon double precision,
         speed double precision, course double precision,
         ts timestamptz, source text)""",
+    "CREATE INDEX IF NOT EXISTS idx_tracks_mmsi_ts ON tracks (mmsi, ts DESC)",
     """CREATE TABLE IF NOT EXISTS suspicion_events (
         suspicion_id text PRIMARY KEY, mmsi text, imo text, name text,
         rule text, cable text, severity double precision,
