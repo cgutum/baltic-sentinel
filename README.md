@@ -39,3 +39,9 @@ curl http://localhost:8000/health
 |---|---|
 | Backend | http://localhost:8000 |
 | Frontend | http://localhost:3000 |
+
+
+python -m uvicorn app.main:app --port 8000
+python -m app.data_pipeline.ingest
+python -m app.data_pipeline.tripwire
+python -m app.data_pipeline.state_builder
