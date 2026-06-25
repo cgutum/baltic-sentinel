@@ -19,8 +19,19 @@ from fastapi.responses import JSONResponse, FileResponse
 
 router = APIRouter()
 
-# Frontend (served at GET /): the Gotham watch console at repo/frontend/prototype.html
-_UI_FILE = Path(__file__).resolve().parents[3] / "frontend" / "prototype.html"
+# Frontend (served at GET /): the Gotham watch console. Resolve robustly so it works
+# both in the repo (parents[3]/frontend) and in the Docker image (WORKDIR /app, the app
+# package at /app/app and the UI copied to /app/frontend -> parents[2]/frontend).
+def _resolve_ui() -> Path:
+    here = Path(__file__).resolve()
+    for base in (here.parents[3], here.parents[2], here.parents[1]):
+        cand = base / "frontend" / "prototype.html"
+        if cand.exists():
+            return cand
+    return here.parents[3] / "frontend" / "prototype.html"
+
+
+_UI_FILE = _resolve_ui()
 
 # Simple per-vessel debounce so a double-click doesn't fire two investigations.
 _INVESTIGATE_DEBOUNCE_SEC = 5

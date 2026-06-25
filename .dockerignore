@@ -1,0 +1,13 @@
+# Keep secrets, history, and cruft out of the deploy image (creds come via env vars).
+.git
+.gstack
+.env
+*.env
+**/.env
+ca.pem
+**/*.pem
+__pycache__/
+**/__pycache__/
+*.pyc
+backend/data/
+frontend/src/
