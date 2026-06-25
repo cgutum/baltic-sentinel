@@ -8,6 +8,7 @@ the gap can only be found by scanning, not reactively).
 Run as a worker:  python -m app.data_pipeline.state_builder
 """
 import datetime
+import os
 import threading
 import time
 from collections import defaultdict, deque
@@ -16,6 +17,11 @@ from .. import database, scoring
 from ..kafka_client import consume, TOPIC_AIS_RAW
 
 SWEEP_SEC = 30
+# Consumer group. A brand-new group name resumes at the LATEST offset
+# (auto.offset.reset=latest) and skips any stale backlog -- i.e. jump straight to
+# real-time instead of grinding hours of old positions. Bump the default (or set
+# STATE_BUILDER_GROUP) whenever you want a clean from-now-on start.
+GROUP_ID = os.getenv("STATE_BUILDER_GROUP", "state_builder-v3")
 _REQUIRED = ("mmsi", "lat", "lon", "speed", "timestamp")
 
 # Per-vessel rolling position buffer for the anchor-drag signature.
@@ -104,10 +110,10 @@ def _sweep_loop() -> None:
 
 
 def run() -> None:
-    print("[state_builder] consuming ais.raw ...")
+    print(f"[state_builder] consuming ais.raw (group={GROUP_ID}, from latest) ...")
     database.init_tables()  # ensure vessels/tracks tables + indexes exist before writing
     threading.Thread(target=_sweep_loop, daemon=True).start()
-    for msg in consume(TOPIC_AIS_RAW, group_id="state_builder-v2", offset_reset="latest"):
+    for msg in consume(TOPIC_AIS_RAW, group_id=GROUP_ID, offset_reset="latest"):
         try:
             handle(msg)
         except Exception as e:  # noqa: BLE001 — a bad message must not kill the worker
