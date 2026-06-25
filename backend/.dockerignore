@@ -1,0 +1,9 @@
+# Keep secrets and cruft out of the build image (creds come in via env vars at runtime).
+.env
+*.env
+ca.pem
+*.pem
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store

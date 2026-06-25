@@ -78,14 +78,23 @@ def _conf_base() -> dict:
             if val:
                 conf[loc_key if os.path.exists(val) else pem_key] = val
         return conf
-    return {
+    sasl = {
         "bootstrap.servers": bootstrap,
         "security.protocol": "SASL_SSL",
         "sasl.mechanisms": "SCRAM-SHA-256",
         "sasl.username": settings.aiven_kafka_username,
         "sasl.password": settings.aiven_kafka_password,
-        "ssl.ca.location": _ca_path(),
     }
+    ca = _ca_path()
+    if os.path.exists(ca):
+        sasl["ssl.ca.location"] = ca
+    else:
+        # Deploy/demo fallback: no CA file shipped (it's gitignored). Encrypt but skip
+        # CA verification so the container can still reach the broker. Set KAFKA_CA_PEM
+        # (written to a file by start.sh) to restore full verification.
+        sasl["enable.ssl.certificate.verification"] = False
+        print("[kafka] CA file not found; SSL cert verification disabled (deploy fallback)")
+    return sasl
 
 
 def _producer_conf() -> dict:

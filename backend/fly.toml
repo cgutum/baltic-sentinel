@@ -1,0 +1,24 @@
+# Fly.io config for the Baltic Sentinel backend (FastAPI + ingest + state_builder).
+# Deploy from backend/:  fly launch --no-deploy  →  fly secrets set ...  →  fly deploy
+app = "baltic-sentinel"
+primary_region = "arn"  # Stockholm — closest to the Aiven data in Finland
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+  DEMO_MODE = "false"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  # MUST stay on: ingest + state_builder are always-on workers, not request-driven.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 1024
